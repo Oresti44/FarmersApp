@@ -1,33 +1,30 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (
-    RecurringTaskSeriesViewSet,
-    TaskAssignmentViewSet,
-    TaskCommentViewSet,
-    TaskTemplateViewSet,
-    WorkerGroupViewSet,
-    WorkTaskViewSet,
-    api_root,
-    health_check,
-    task_conflicts,
-    task_dashboard,
+from api.modules.plants.controllers import (
+    GreenhousesViewSet,
+    HarvestHistoryViewSet,
+    PlantsViewSet,
+    PlotsViewSet,
+    ResourceUsageViewSet,
 )
+from api.modules.shared.controllers import api_root, health_check, ui_meta
+from api.modules.tasks.controllers import TaskSeriesViewSet, TasksViewSet
 
 
 router = DefaultRouter()
-router.register("tasks", WorkTaskViewSet, basename="tasks")
-router.register("recurring-series", RecurringTaskSeriesViewSet, basename="recurring-series")
-router.register("task-templates", TaskTemplateViewSet, basename="task-templates")
-router.register("worker-groups", WorkerGroupViewSet, basename="worker-groups")
-router.register("assignments", TaskAssignmentViewSet, basename="assignments")
-router.register("comments", TaskCommentViewSet, basename="comments")
+router.register("tasks", TasksViewSet, basename="tasks")
+router.register("task-series", TaskSeriesViewSet, basename="task-series")
+router.register("plants", PlantsViewSet, basename="plants")
+router.register("plots", PlotsViewSet, basename="plots")
+router.register("greenhouses", GreenhousesViewSet, basename="greenhouses")
+router.register("harvest-history", HarvestHistoryViewSet, basename="harvest-history")
+router.register("resource-usage", ResourceUsageViewSet, basename="resource-usage")
 
 
 urlpatterns = [
     path("", api_root, name="api-root"),
     path("health/", health_check, name="health-check"),
-    path("tasks/dashboard/", task_dashboard, name="task-dashboard"),
-    path("tasks/conflicts/", task_conflicts, name="task-conflicts"),
+    path("ui-meta/", ui_meta, name="ui-meta"),
     path("", include(router.urls)),
 ]

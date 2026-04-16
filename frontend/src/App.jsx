@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import AppLayout from './components/AppLayout.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import FinancePage from './pages/FinancePage.jsx'
+import PlantsPage from './features/plants/pages/PlantsPage.jsx'
+import TasksPage from './features/tasks/pages/TasksPage.jsx'
 import InventoryPage from './pages/InventoryPage.jsx'
-import PlantManagementPage from './pages/PlantManagementPage.jsx'
-import WorkTasksPage from './pages/WorkTasksPage.jsx'
 
 const routes = {
   dashboard: {
@@ -20,12 +20,12 @@ const routes = {
     component: InventoryPage,
   },
   work: {
-    label: 'Work / Tasks',
-    component: WorkTasksPage,
+    label: 'Tasks',
+    component: TasksPage,
   },
   plants: {
-    label: 'Plant Management',
-    component: PlantManagementPage,
+    label: 'Plants',
+    component: PlantsPage,
   },
 }
 
