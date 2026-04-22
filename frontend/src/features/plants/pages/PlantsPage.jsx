@@ -501,31 +501,22 @@ function PlantsPage() {
   )
 
   return (
-    <div className="space-y-6">
+    <div
+      className={`grid min-h-[calc(100vh-4.75rem)] ${
+        sectionNavCollapsed ? 'lg:grid-cols-[4.5rem_minmax(0,1fr)]' : 'lg:grid-cols-[16rem_minmax(0,1fr)]'
+      }`}
+    >
       <ToastViewport toasts={toasts} onDismiss={dismissToast} />
-      <div className="border-b border-stone-200 pb-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Plants</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-950">Plants workspace</h1>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
-          Manage plants, plots, greenhouses, harvest history, and resource usage from focused subsections.
-        </p>
-      </div>
+      <SectionSidebar
+        activeTab={activeTab}
+        collapsed={sectionNavCollapsed}
+        onChange={setActiveTab}
+        onToggle={() => setSectionNavCollapsed((current) => !current)}
+        tabs={PLANTS_TABS}
+        title="Plants"
+      />
 
-      <div
-        className={`grid gap-6 ${
-          sectionNavCollapsed ? 'lg:grid-cols-[4.5rem_minmax(0,1fr)]' : 'lg:grid-cols-[16rem_minmax(0,1fr)]'
-        }`}
-      >
-        <SectionSidebar
-          activeTab={activeTab}
-          collapsed={sectionNavCollapsed}
-          onChange={setActiveTab}
-          onToggle={() => setSectionNavCollapsed((current) => !current)}
-          tabs={PLANTS_TABS}
-          title="Plants"
-        />
-
-        <div className="min-w-0 space-y-5">
+      <div className="min-w-0 space-y-5 px-4 py-6 sm:px-6 lg:px-8">
           {error ? <EmptyState title="Plants API unavailable" description={error} /> : null}
           {loading ? (
             <EmptyState title="Loading plants" description="Pulling plants, dashboard data, and reference lists from the API." />
@@ -617,7 +608,6 @@ function PlantsPage() {
               ) : null}
             </>
           ) : null}
-        </div>
       </div>
 
       <PlantDrawer

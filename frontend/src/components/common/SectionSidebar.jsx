@@ -4,7 +4,7 @@ function formatLabel(value) {
 
 function SectionSidebar({ activeTab, collapsed, onChange, onToggle, tabs, title }) {
   return (
-    <aside className="h-fit rounded-lg border border-stone-200/80 bg-white/82 p-3 shadow-sm backdrop-blur lg:sticky lg:top-24">
+    <aside className="min-h-[calc(100vh-4.75rem)] border-r border-stone-200/80 bg-white/82 p-3 backdrop-blur lg:sticky lg:top-[4.75rem]">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className={collapsed ? 'lg:hidden' : ''}>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">{title}</p>
