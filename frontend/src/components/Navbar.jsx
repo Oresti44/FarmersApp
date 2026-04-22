@@ -1,7 +1,7 @@
 function Navbar({ currentRoute, routes }) {
   return (
-    <header className="sticky top-5 z-20">
-      <div className="flex flex-col gap-4 rounded-[28px] border border-white/70 bg-white/80 px-5 py-4 shadow-[0_24px_80px_rgba(82,97,69,0.12)] backdrop-blur md:flex-row md:items-center md:justify-between">
+    <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-[#f7f5ef]/95 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
         <div>
           <a
             href="#dashboard"
@@ -14,7 +14,7 @@ function Navbar({ currentRoute, routes }) {
           </p>
         </div>
 
-        <nav className="flex flex-wrap gap-2">
+        <nav className="flex flex-wrap gap-1">
           {Object.entries(routes).map(([key, route]) => {
             const isActive = currentRoute === key
 
@@ -22,10 +22,10 @@ function Navbar({ currentRoute, routes }) {
               <a
                 key={key}
                 href={`#${key}`}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
                   isActive
-                    ? 'bg-stone-900 text-white shadow-sm'
-                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-900'
+                    ? 'bg-stone-950 text-white hover:bg-stone-900'
+                    : 'text-stone-600 hover:bg-stone-100 hover:text-stone-950'
                 }`}
               >
                 {route.label}

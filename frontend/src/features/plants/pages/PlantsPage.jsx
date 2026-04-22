@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import EmptyState from '../../../components/common/EmptyState.jsx'
+import SectionSidebar from '../../../components/common/SectionSidebar.jsx'
 import ToastViewport from '../../../components/common/ToastViewport.jsx'
 import tasksApi from '../../tasks/api/tasksApi.js'
 import plantsApi from '../api/plantsApi.js'
@@ -12,10 +13,8 @@ import HarvestHistoryTable from '../components/HarvestHistoryTable.jsx'
 import PlantDrawer from '../components/PlantDrawer.jsx'
 import PlantForm from '../components/PlantForm.jsx'
 import PlantsFiltersBar from '../components/PlantsFiltersBar.jsx'
-import PlantsHeader from '../components/PlantsHeader.jsx'
 import PlantsOverview from '../components/PlantsOverview.jsx'
 import PlantsTable from '../components/PlantsTable.jsx'
-import PlantsTabs from '../components/PlantsTabs.jsx'
 import PlotForm from '../components/PlotForm.jsx'
 import PlotsTable from '../components/PlotsTable.jsx'
 import ResourceUsageForm from '../components/ResourceUsageForm.jsx'
@@ -38,9 +37,113 @@ function blankFilters() {
   }
 }
 
+function blankRecordFilters() {
+  return {
+    search: '',
+    date_from: '',
+    date_to: '',
+  }
+}
+
+function ActionButton({ children, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-900"
+    >
+      {children}
+    </button>
+  )
+}
+
+function SectionHeading({ action, description, eyebrow, title }) {
+  return (
+    <div className="flex flex-col gap-3 border-b border-stone-200 pb-4 md:flex-row md:items-end md:justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">{eyebrow}</p>
+        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-stone-950">{title}</h2>
+        {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">{description}</p> : null}
+      </div>
+      {action}
+    </div>
+  )
+}
+
+function RecordFiltersBar({ action, filters, onChange, searchPlaceholder, title }) {
+  return (
+    <section className="rounded-lg border border-stone-200/80 bg-white/82 p-4 shadow-sm backdrop-blur">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">Filters</p>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight text-stone-950">{title}</h2>
+        </div>
+        {action}
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+            Search
+          </span>
+          <input
+            value={filters.search}
+            onChange={(event) => onChange({ search: event.target.value })}
+            placeholder={searchPlaceholder}
+            className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none transition focus:border-stone-400"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+            Date from
+          </span>
+          <input
+            type="date"
+            value={filters.date_from}
+            onChange={(event) => onChange({ date_from: event.target.value })}
+            className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+            Date to
+          </span>
+          <input
+            type="date"
+            value={filters.date_to}
+            onChange={(event) => onChange({ date_to: event.target.value })}
+            className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none"
+          />
+        </label>
+      </div>
+    </section>
+  )
+}
+
+function containsSearch(values, search) {
+  const query = search.trim().toLowerCase()
+  if (!query) {
+    return true
+  }
+
+  return values.some((value) => String(value || '').toLowerCase().includes(query))
+}
+
+function matchesFarm(item, farmId) {
+  return !farmId || String(item.farm?.id) === String(farmId)
+}
+
+function dateInRange(value, dateFrom, dateTo) {
+  const date = value ? String(value).slice(0, 10) : ''
+  return (!dateFrom || date >= dateFrom) && (!dateTo || date <= dateTo)
+}
+
 function PlantsPage() {
   const [filters, setFilters] = useState(blankFilters)
+  const [harvestFilters, setHarvestFilters] = useState(blankRecordFilters)
+  const [resourceFilters, setResourceFilters] = useState(blankRecordFilters)
   const [activeTab, setActiveTab] = useState('overview')
+  const [sectionNavCollapsed, setSectionNavCollapsed] = useState(false)
   const [selectedPlant, setSelectedPlant] = useState(null)
   const [plantFormState, setPlantFormState] = useState({ open: false, plant: null })
   const [plotFormState, setPlotFormState] = useState({ open: false, plot: null })
@@ -85,6 +188,14 @@ function PlantsPage() {
 
   function patchFilters(next) {
     setFilters((current) => ({ ...current, ...next }))
+  }
+
+  function patchHarvestFilters(next) {
+    setHarvestFilters((current) => ({ ...current, ...next }))
+  }
+
+  function patchResourceFilters(next) {
+    setResourceFilters((current) => ({ ...current, ...next }))
   }
 
   function pushToast(title, message, tone = 'success') {
@@ -335,33 +446,179 @@ function PlantsPage() {
     await refreshAll()
   }
 
-  const visiblePlots = filters.show_archived ? plots : plots.filter((plot) => plot.status === 'active')
-  const visibleGreenhouses = filters.show_archived
-    ? greenhouses
-    : greenhouses.filter((greenhouse) => greenhouse.status === 'active')
+  const visiblePlots = plots.filter((plot) => {
+    if (!filters.show_archived && plot.status !== 'active') {
+      return false
+    }
+
+    return (
+      matchesFarm(plot, filters.farm) &&
+      containsSearch(
+        [plot.name, plot.code, plot.farm?.name, plot.soil_type, plot.irrigation_type, plot.current_plant?.name],
+        filters.search,
+      )
+    )
+  })
+  const visibleGreenhouses = greenhouses.filter((greenhouse) => {
+    if (!filters.show_archived && greenhouse.status !== 'active') {
+      return false
+    }
+
+    return (
+      matchesFarm(greenhouse, filters.farm) &&
+      containsSearch(
+        [
+          greenhouse.name,
+          greenhouse.code,
+          greenhouse.farm?.name,
+          greenhouse.greenhouse_type,
+          greenhouse.current_plant?.name,
+        ],
+        filters.search,
+      )
+    )
+  })
+  const visibleHarvestEntries = harvestEntries.filter(
+    (entry) =>
+      containsSearch(
+        [entry.plant, entry.quality_grade, entry.notes, entry.recorded_by?.full_name],
+        harvestFilters.search,
+      ) && dateInRange(entry.harvested_at, harvestFilters.date_from, harvestFilters.date_to),
+  )
+  const visibleResourceEntries = resourceEntries.filter(
+    (entry) =>
+      containsSearch(
+        [
+          entry.plant,
+          entry.linked_task?.title,
+          entry.resource_name,
+          entry.resource_type,
+          entry.notes,
+          entry.recorded_by?.full_name,
+        ],
+        resourceFilters.search,
+      ) && dateInRange(entry.used_at, resourceFilters.date_from, resourceFilters.date_to),
+  )
 
   return (
     <div className="space-y-6">
       <ToastViewport toasts={toasts} onDismiss={dismissToast} />
-      <PlantsHeader farms={meta.farms} filters={filters} onChange={patchFilters} onNewPlant={() => setPlantFormState({ open: true, plant: null })} />
-      <PlantsFiltersBar filters={filters} onChange={patchFilters} stages={meta.plant_stages} />
-      <PlantsTabs activeTab={activeTab} onChange={setActiveTab} tabs={PLANTS_TABS} />
+      <div className="border-b border-stone-200 pb-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Plants</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-950">Plants workspace</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
+          Manage plants, plots, greenhouses, harvest history, and resource usage from focused subsections.
+        </p>
+      </div>
 
-      {error ? <EmptyState title="Plants API unavailable" description={error} /> : null}
-      {loading ? <EmptyState title="Loading plants" description="Pulling plants, dashboard data, and reference lists from the API." /> : null}
+      <div
+        className={`grid gap-6 ${
+          sectionNavCollapsed ? 'lg:grid-cols-[4.5rem_minmax(0,1fr)]' : 'lg:grid-cols-[16rem_minmax(0,1fr)]'
+        }`}
+      >
+        <SectionSidebar
+          activeTab={activeTab}
+          collapsed={sectionNavCollapsed}
+          onChange={setActiveTab}
+          onToggle={() => setSectionNavCollapsed((current) => !current)}
+          tabs={PLANTS_TABS}
+          title="Plants"
+        />
 
-      {!loading && !error ? (
-        <>
-          {activeTab === 'overview' ? <PlantsOverview dashboard={dashboard} /> : null}
-          {activeTab === 'plants' ? <PlantsTable onAction={handlePlantAction} onOpen={(plant) => openPlant(plant.id)} plants={plants} /> : null}
-          {activeTab === 'plots' ? <PlotsTable onAction={handlePlotAction} plots={visiblePlots} /> : null}
-          {activeTab === 'greenhouses' ? (
-            <GreenhousesTable onAction={handleGreenhouseAction} greenhouses={visibleGreenhouses} />
+        <div className="min-w-0 space-y-5">
+          {error ? <EmptyState title="Plants API unavailable" description={error} /> : null}
+          {loading ? (
+            <EmptyState title="Loading plants" description="Pulling plants, dashboard data, and reference lists from the API." />
           ) : null}
-          {activeTab === 'harvest' ? <HarvestHistoryTable entries={harvestEntries} onAction={handleHarvestAction} /> : null}
-          {activeTab === 'resources' ? <ResourceUsageTable entries={resourceEntries} onAction={handleResourceAction} /> : null}
-        </>
-      ) : null}
+
+          {!loading && !error ? (
+            <>
+              {activeTab === 'overview' ? (
+                <>
+                  <SectionHeading
+                    eyebrow="Plants"
+                    title="Overview"
+                    description="Current plant counts, area use, and harvest/resource activity summaries."
+                  />
+                  <PlantsOverview dashboard={dashboard} />
+                </>
+              ) : null}
+              {activeTab === 'plants' ? (
+                <>
+                  <PlantsFiltersBar
+                    action={<ActionButton onClick={() => setPlantFormState({ open: true, plant: null })}>Add Plant</ActionButton>}
+                    farms={meta.farms}
+                    filters={filters}
+                    onChange={patchFilters}
+                    stages={meta.plant_stages}
+                  />
+                  <PlantsTable onAction={handlePlantAction} onOpen={(plant) => openPlant(plant.id)} plants={plants} />
+                </>
+              ) : null}
+              {activeTab === 'plots' ? (
+                <>
+                  <PlantsFiltersBar
+                    action={<ActionButton onClick={() => setPlotFormState({ open: true, plot: null })}>Add Plot</ActionButton>}
+                    farms={meta.farms}
+                    filters={filters}
+                    mode="areas"
+                    onChange={patchFilters}
+                  />
+                  <PlotsTable onAction={handlePlotAction} plots={visiblePlots} />
+                </>
+              ) : null}
+              {activeTab === 'greenhouses' ? (
+                <>
+                  <PlantsFiltersBar
+                    action={
+                      <ActionButton onClick={() => setGreenhouseFormState({ open: true, greenhouse: null })}>
+                        Add Greenhouse
+                      </ActionButton>
+                    }
+                    farms={meta.farms}
+                    filters={filters}
+                    mode="areas"
+                    onChange={patchFilters}
+                  />
+                  <GreenhousesTable onAction={handleGreenhouseAction} greenhouses={visibleGreenhouses} />
+                </>
+              ) : null}
+              {activeTab === 'harvest' ? (
+                <>
+                  <RecordFiltersBar
+                    action={
+                      <ActionButton onClick={() => setHarvestFormState({ open: true, entry: null, plantId: null })}>
+                        Record Harvest
+                      </ActionButton>
+                    }
+                    filters={harvestFilters}
+                    onChange={patchHarvestFilters}
+                    searchPlaceholder="Plant, quality, note, or recorder"
+                    title="Harvest filters"
+                  />
+                  <HarvestHistoryTable entries={visibleHarvestEntries} onAction={handleHarvestAction} />
+                </>
+              ) : null}
+              {activeTab === 'resources' ? (
+                <>
+                  <RecordFiltersBar
+                    action={
+                      <ActionButton onClick={() => setResourceFormState({ open: true, entry: null, plantId: null })}>
+                        Add Usage
+                      </ActionButton>
+                    }
+                    filters={resourceFilters}
+                    onChange={patchResourceFilters}
+                    searchPlaceholder="Plant, resource, task, note, or recorder"
+                    title="Resource filters"
+                  />
+                  <ResourceUsageTable entries={visibleResourceEntries} onAction={handleResourceAction} />
+                </>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      </div>
 
       <PlantDrawer
         onClose={() => setSelectedPlant(null)}

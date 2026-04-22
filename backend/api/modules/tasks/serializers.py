@@ -140,8 +140,9 @@ class TaskListSerializer(serializers.ModelSerializer):
 
     def get_flags(self, obj):
         now = timezone.now()
+        scheduled_end_at = database.aware_datetime(obj.scheduled_end_at)
         return {
-            "overdue": obj.scheduled_end_at < now and obj.status not in ["completed", "cancelled"],
+            "overdue": scheduled_end_at < now and obj.status not in ["completed", "cancelled"],
             "needs_confirmation": obj.status == "completed_pending_confirmation",
             "is_repeating_instance": bool(obj.recurring_series_id),
         }

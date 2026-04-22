@@ -278,7 +278,7 @@ class PlantDetailSerializer(PlantSummarySerializer):
             }
             for task in obj.tasks.all()
         )
-        return sorted(items, key=lambda item: item["at"] or timezone.now(), reverse=True)
+        return sorted(items, key=lambda item: database.aware_datetime(item["at"]), reverse=True)
 
 
 class PlantWriteSerializer(serializers.ModelSerializer):

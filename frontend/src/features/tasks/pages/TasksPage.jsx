@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import EmptyState from '../../../components/common/EmptyState.jsx'
+import SectionSidebar from '../../../components/common/SectionSidebar.jsx'
 import ToastViewport from '../../../components/common/ToastViewport.jsx'
 import tasksApi from '../api/tasksApi.js'
 import TaskActivityFeed from '../components/TaskActivityFeed.jsx'
@@ -9,10 +10,8 @@ import TaskForm from '../components/TaskForm.jsx'
 import TasksCalendar from '../components/TasksCalendar.jsx'
 import DeleteTaskDialog from '../components/DeleteTaskDialog.jsx'
 import TasksFiltersBar from '../components/TasksFiltersBar.jsx'
-import TasksHeader from '../components/TasksHeader.jsx'
 import TasksList from '../components/TasksList.jsx'
 import TasksOverview from '../components/TasksOverview.jsx'
-import TasksTabs from '../components/TasksTabs.jsx'
 import useTasks from '../hooks/useTasks.js'
 import { TASK_TABS } from '../types/tasks.js'
 
@@ -54,9 +53,20 @@ function uniquePlants(tasks) {
   return [...byId.values()]
 }
 
+function SectionHeading({ description, eyebrow, title }) {
+  return (
+    <div className="border-b border-stone-200 pb-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">{eyebrow}</p>
+      <h2 className="mt-1 text-2xl font-semibold tracking-tight text-stone-950">{title}</h2>
+      {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">{description}</p> : null}
+    </div>
+  )
+}
+
 function TasksPage() {
   const [filters, setFilters] = useState(blankFilters)
   const [activeTab, setActiveTab] = useState('overview')
+  const [sectionNavCollapsed, setSectionNavCollapsed] = useState(false)
   const [calendarMode, setCalendarMode] = useState('week')
   const [selectedTask, setSelectedTask] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -305,80 +315,136 @@ function TasksPage() {
   return (
     <div className="space-y-6">
       <ToastViewport toasts={toasts} onDismiss={dismissToast} />
-      <TasksHeader
-        actingRole={actingRole}
-        actingUserId={currentActorId}
-        farms={meta.farms}
-        filters={filters}
-        onFarmChange={(value) => patchFilters({ farm: value })}
-        onFiltersChange={patchFilters}
-        onNewTask={() => {
-          setTaskToEdit(null)
-          setFormOpen(true)
-        }}
-        onRoleChange={setActingRole}
-        onUserChange={setActingUserId}
-        plants={plantOptions}
-        users={meta.users}
-      />
-      <TasksFiltersBar filters={filters} onChange={patchFilters} workerOptions={meta.workers} />
-      <TasksTabs activeTab={activeTab} onChange={setActiveTab} tabs={TASK_TABS} />
+      <div className="border-b border-stone-200 pb-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Tasks</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-stone-950">Task workspace</h1>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">
+          Schedule work, review assignments, and track activity from focused task subsections.
+        </p>
+      </div>
 
-      {error ? <EmptyState title="Task API unavailable" description={error} /> : null}
-      {loading ? (
-        <EmptyState
-          title="Loading tasks"
-          description="Pulling tasks, dashboard data, and activity feed from the API."
+      <div
+        className={`grid gap-6 ${
+          sectionNavCollapsed ? 'lg:grid-cols-[4.5rem_minmax(0,1fr)]' : 'lg:grid-cols-[16rem_minmax(0,1fr)]'
+        }`}
+      >
+        <SectionSidebar
+          activeTab={activeTab}
+          collapsed={sectionNavCollapsed}
+          onChange={setActiveTab}
+          onToggle={() => setSectionNavCollapsed((current) => !current)}
+          tabs={TASK_TABS}
+          title="Tasks"
         />
-      ) : null}
 
-      {!loading && !error ? (
-        <>
-          {activeTab === 'overview' ? (
-            <TasksOverview dashboard={dashboard} onOpenItem={() => setActiveTab('list')} />
-          ) : null}
-          {activeTab === 'calendar' ? (
-            <TasksCalendar
-              mode={calendarMode}
-              onCreateSlot={(day) => {
-                setTaskToEdit({
-                  title: '',
-                  description: '',
-                  category: 'general',
-                  priority: 'medium',
-                  scheduled_start_at: `${day}T08:00:00Z`,
-                  scheduled_end_at: `${day}T09:00:00Z`,
-                })
-                setFormOpen(true)
-              }}
-              onModeChange={setCalendarMode}
-              onSelectTask={(task) => loadTaskDetail(task.id)}
-              tasks={tasks}
+        <div className="min-w-0 space-y-5">
+          {error ? <EmptyState title="Task API unavailable" description={error} /> : null}
+          {loading ? (
+            <EmptyState
+              title="Loading tasks"
+              description="Pulling tasks, dashboard data, and activity feed from the API."
             />
           ) : null}
-          {activeTab === 'list' ? (
-            <TasksList
-              actingRole={actingRole}
-              onAction={handleRowAction}
-              onBulkDelete={handleBulkDelete}
-              onBulkMove={handleBulkMove}
-              onBulkPriority={handleBulkPriority}
-              onBulkStatus={handleBulkStatus}
-              onSelectTask={(task) => loadTaskDetail(task.id)}
-              selectedIds={selectedIds}
-              setSelectedIds={setSelectedIds}
-              tasks={tasks}
-            />
+
+          {!loading && !error ? (
+            <>
+              {activeTab === 'overview' ? (
+                <>
+                  <SectionHeading
+                    eyebrow="Tasks"
+                    title="Overview"
+                    description="Current task load, status totals, and upcoming work summary."
+                  />
+                  <TasksOverview dashboard={dashboard} onOpenItem={() => setActiveTab('list')} />
+                </>
+              ) : null}
+              {activeTab === 'calendar' ? (
+                <>
+                  <TasksFiltersBar
+                    actingRole={actingRole}
+                    actingUserId={currentActorId}
+                    farms={meta.farms}
+                    filters={filters}
+                    onChange={patchFilters}
+                    onNewTask={() => {
+                      setTaskToEdit(null)
+                      setFormOpen(true)
+                    }}
+                    onRoleChange={setActingRole}
+                    onUserChange={setActingUserId}
+                    plants={plantOptions}
+                    users={meta.users}
+                    workerOptions={meta.workers}
+                  />
+                  <TasksCalendar
+                    mode={calendarMode}
+                    onCreateSlot={(day) => {
+                      setTaskToEdit({
+                        title: '',
+                        description: '',
+                        category: 'general',
+                        priority: 'medium',
+                        scheduled_start_at: `${day}T08:00:00Z`,
+                        scheduled_end_at: `${day}T09:00:00Z`,
+                      })
+                      setFormOpen(true)
+                    }}
+                    onModeChange={setCalendarMode}
+                    onSelectTask={(task) => loadTaskDetail(task.id)}
+                    tasks={tasks}
+                  />
+                </>
+              ) : null}
+              {activeTab === 'list' ? (
+                <>
+                  <TasksFiltersBar
+                    actingRole={actingRole}
+                    actingUserId={currentActorId}
+                    farms={meta.farms}
+                    filters={filters}
+                    onChange={patchFilters}
+                    onNewTask={() => {
+                      setTaskToEdit(null)
+                      setFormOpen(true)
+                    }}
+                    onRoleChange={setActingRole}
+                    onUserChange={setActingUserId}
+                    plants={plantOptions}
+                    users={meta.users}
+                    workerOptions={meta.workers}
+                  />
+                  <TasksList
+                    actingRole={actingRole}
+                    onAction={handleRowAction}
+                    onBulkDelete={handleBulkDelete}
+                    onBulkMove={handleBulkMove}
+                    onBulkPriority={handleBulkPriority}
+                    onBulkStatus={handleBulkStatus}
+                    onSelectTask={(task) => loadTaskDetail(task.id)}
+                    selectedIds={selectedIds}
+                    setSelectedIds={setSelectedIds}
+                    tasks={tasks}
+                  />
+                </>
+              ) : null}
+              {activeTab === 'activity' ? (
+                <>
+                  <SectionHeading
+                    eyebrow="Tasks"
+                    title="Activity"
+                    description="Task comments and status history with filters inside this section."
+                  />
+                  <TaskActivityFeed
+                    activity={activity}
+                    filters={activityFilters}
+                    onChange={(next) => setActivityFilters((current) => ({ ...current, ...next }))}
+                  />
+                </>
+              ) : null}
+            </>
           ) : null}
-          {activeTab === 'activity' ? (
-            <TaskActivityFeed
-              activity={activity}
-              filters={activityFilters}
-              onChange={(next) => setActivityFilters((current) => ({ ...current, ...next }))}
-            />
-          ) : null}
-        </>
-      ) : null}
+        </div>
+      </div>
 
       <TaskDrawer
         actingRole={actingRole}

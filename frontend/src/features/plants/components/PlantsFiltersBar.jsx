@@ -1,40 +1,119 @@
-function PlantsFiltersBar({ filters, onChange, stages }) {
+import SearchSelect from '../../../components/common/SearchSelect.jsx'
+
+function PlantsFiltersBar({ action, farms = [], filters, mode = 'plants', onChange, stages = [] }) {
+  const farmOptions = farms.map((farm) => ({
+    id: farm.id,
+    label: farm.name,
+    subtitle: farm.location_text || 'Farm',
+  }))
+  const isPlantMode = mode === 'plants'
+  const title = isPlantMode ? 'Plant filters' : 'Area filters'
+
   return (
-    <section className="sticky top-[5.5rem] z-20 rounded-[28px] border border-white/80 bg-white/88 p-4 shadow-[0_20px_60px_rgba(82,97,69,0.1)] backdrop-blur">
-      <div className="flex min-w-0 flex-nowrap gap-3 overflow-x-auto pb-1">
-        <select
-          value={filters.status}
-          onChange={(event) => onChange({ status: event.target.value })}
-          className="rounded-full border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
-        >
-          <option value="">All statuses</option>
-          <option value="active">Active</option>
-          <option value="harvested">Harvested</option>
-          <option value="failed">Failed</option>
-          <option value="removed">Removed</option>
-        </select>
-        <select
-          value={filters.stage}
-          onChange={(event) => onChange({ stage: event.target.value })}
-          className="rounded-full border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
-        >
-          <option value="">All stages</option>
-          {stages.map((stage) => (
-            <option key={stage.id} value={stage.id}>
-              {stage.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={filters.area_type}
-          onChange={(event) => onChange({ area_type: event.target.value })}
-          className="rounded-full border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm"
-        >
-          <option value="">All areas</option>
-          <option value="plot">Plots</option>
-          <option value="greenhouse">Greenhouses</option>
-        </select>
-        <label className="inline-flex items-center gap-3 rounded-full border border-stone-200 bg-stone-50 px-4 py-2.5 text-sm text-stone-700">
+    <section className="rounded-lg border border-stone-200/80 bg-white/82 p-4 shadow-sm backdrop-blur">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">Filters</p>
+          <h2 className="mt-1 text-xl font-semibold tracking-tight text-stone-950">{title}</h2>
+        </div>
+        {action}
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <SearchSelect
+          label="Farm"
+          value={filters.farm}
+          options={farmOptions}
+          onChange={(value) => onChange({ farm: value })}
+          placeholder="All farms"
+        />
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+            Search
+          </span>
+          <input
+            value={filters.search}
+            onChange={(event) => onChange({ search: event.target.value })}
+            placeholder={isPlantMode ? 'Plant, variety, or area' : 'Area, code, or crop'}
+            className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none transition focus:border-stone-400"
+          />
+        </label>
+
+        {isPlantMode ? (
+          <>
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+                Status
+              </span>
+              <select
+                value={filters.status}
+                onChange={(event) => onChange({ status: event.target.value })}
+                className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none"
+              >
+                <option value="">All statuses</option>
+                <option value="active">Active</option>
+                <option value="harvested">Harvested</option>
+                <option value="failed">Failed</option>
+                <option value="removed">Removed</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+                Stage
+              </span>
+              <select
+                value={filters.stage}
+                onChange={(event) => onChange({ stage: event.target.value })}
+                className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none"
+              >
+                <option value="">All stages</option>
+                {stages.map((stage) => (
+                  <option key={stage.id} value={stage.id}>
+                    {stage.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+                Area
+              </span>
+              <select
+                value={filters.area_type}
+                onChange={(event) => onChange({ area_type: event.target.value })}
+                className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none"
+              >
+                <option value="">All areas</option>
+                <option value="plot">Plots</option>
+                <option value="greenhouse">Greenhouses</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+                Harvest from
+              </span>
+              <input
+                type="date"
+                value={filters.expected_from}
+                onChange={(event) => onChange({ expected_from: event.target.value })}
+                className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+                Harvest to
+              </span>
+              <input
+                type="date"
+                value={filters.expected_to}
+                onChange={(event) => onChange({ expected_to: event.target.value })}
+                className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none"
+              />
+            </label>
+          </>
+        ) : null}
+
+        <label className="flex min-h-[3.25rem] items-center gap-3 rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-700">
           <input
             type="checkbox"
             checked={filters.show_archived}

@@ -19,6 +19,14 @@ from api.modules.tasks.models import (
 User = get_user_model()
 
 
+def aware_datetime(value):
+    if value is None:
+        return timezone.now()
+    if timezone.is_naive(value):
+        return timezone.make_aware(value, timezone.get_current_timezone())
+    return value
+
+
 def users_queryset():
     return User.objects.order_by("full_name", "email")
 
@@ -757,4 +765,4 @@ def task_activity(queryset, params):
         }
         for entry in history
     )
-    return sorted(items, key=lambda item: item["created_at"], reverse=True)
+    return sorted(items, key=lambda item: aware_datetime(item["created_at"]), reverse=True)
