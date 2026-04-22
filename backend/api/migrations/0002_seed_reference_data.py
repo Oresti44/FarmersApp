@@ -40,7 +40,7 @@ def unseed_reference_data(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("api", "0002_plantstage_alter_worktask_assigned_workers_farm_and_more"),
+        ("api", "0001_initial"),
     ]
 
     operations = [

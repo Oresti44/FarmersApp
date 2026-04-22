@@ -1,6 +1,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
+from api import database
 from api.modules.plants.models import Farm, Greenhouse, HarvestHistoryEntry, Plant, PlantStage, Plot
 from api.modules.plants.validators import validate_expected_range, validate_plant_payload
 from api.modules.shared.serializers import UserSlimSerializer
@@ -283,17 +284,17 @@ class PlantDetailSerializer(PlantSummarySerializer):
 class PlantWriteSerializer(serializers.ModelSerializer):
     plot_id = serializers.PrimaryKeyRelatedField(
         source="plot",
-        queryset=Plot.objects.all(),
+        queryset=database.all_plots_queryset(),
         required=False,
         allow_null=True,
     )
     greenhouse_id = serializers.PrimaryKeyRelatedField(
         source="greenhouse",
-        queryset=Greenhouse.objects.all(),
+        queryset=database.all_greenhouses_queryset(),
         required=False,
         allow_null=True,
     )
-    stage_id = serializers.PrimaryKeyRelatedField(source="stage", queryset=PlantStage.objects.all())
+    stage_id = serializers.PrimaryKeyRelatedField(source="stage", queryset=database.all_plant_stages_queryset())
 
     class Meta:
         model = Plant

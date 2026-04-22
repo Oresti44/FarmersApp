@@ -1,11 +1,11 @@
 from django.utils import timezone
 from rest_framework import serializers
 
+from api import database
 from api.modules.plants.models import Plant
 from api.modules.shared.serializers import UserSlimSerializer
 from api.modules.tasks.models import (
     RecurringTaskPlan,
-    ResourceUsageEntry,
     Task,
     TaskAssignmentRecord,
     TaskCommentRecord,
@@ -126,8 +126,8 @@ class TaskListSerializer(serializers.ModelSerializer):
         return [
             {
                 "id": assignment.worker_id,
-                "username": assignment.worker.username,
-                "full_name": assignment.worker.get_full_name().strip() or assignment.worker.username,
+                "username": assignment.worker.email,
+                "full_name": assignment.worker.full_name or assignment.worker.email,
             }
             for assignment in obj.assignments.all()
         ]
@@ -162,7 +162,7 @@ class TaskDetailSerializer(TaskListSerializer):
         ]
 
     def get_linked_resource_usage(self, obj):
-        usage = ResourceUsageEntry.objects.filter(task=obj).order_by("-used_at")
+        usage = database.task_resource_usage(obj)
         return [
             {
                 "id": entry.id,
@@ -178,7 +178,7 @@ class TaskDetailSerializer(TaskListSerializer):
 
 class TaskWriteSerializer(serializers.ModelSerializer):
     notes = serializers.CharField(source="manager_note", required=False, allow_blank=True)
-    plant_id = serializers.PrimaryKeyRelatedField(source="plant", queryset=Plant.objects.all())
+    plant_id = serializers.PrimaryKeyRelatedField(source="plant", queryset=database.all_plants_queryset())
     assigned_worker_ids = serializers.ListField(
         child=serializers.IntegerField(),
         required=False,

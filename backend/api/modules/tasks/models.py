@@ -1,10 +1,7 @@
-from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import timezone
 
 from api.modules.plants.models import Plant
-
-
-User = get_user_model()
 
 
 class RecurringTaskPlan(models.Model):
@@ -35,7 +32,7 @@ class RecurringTaskPlan(models.Model):
     required_items_text = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_by = models.ForeignKey(
-        User,
+        "api.User",
         db_column="created_by",
         related_name="created_recurring_task_plans",
         on_delete=models.SET_NULL,
@@ -43,7 +40,7 @@ class RecurringTaskPlan(models.Model):
         blank=True,
     )
     last_updated_by = models.ForeignKey(
-        User,
+        "api.User",
         db_column="last_updated_by",
         related_name="updated_recurring_task_plans",
         on_delete=models.SET_NULL,
@@ -108,7 +105,7 @@ class Task(models.Model):
     cancellation_reason = models.TextField(blank=True)
     completion_confirmation_note = models.TextField(blank=True)
     created_by = models.ForeignKey(
-        User,
+        "api.User",
         db_column="created_by",
         related_name="created_tasks_v2",
         on_delete=models.SET_NULL,
@@ -116,7 +113,7 @@ class Task(models.Model):
         blank=True,
     )
     last_updated_by = models.ForeignKey(
-        User,
+        "api.User",
         db_column="last_updated_by",
         related_name="updated_tasks_v2",
         on_delete=models.SET_NULL,
@@ -133,6 +130,14 @@ class Task(models.Model):
             models.CheckConstraint(
                 check=models.Q(scheduled_end_at__gt=models.F("scheduled_start_at")),
                 name="chk_task_time_order",
+            ),
+            models.CheckConstraint(
+                check=(
+                    models.Q(manager_confirmed_at__isnull=True)
+                    | models.Q(worker_completed_at__isnull=True)
+                    | models.Q(manager_confirmed_at__gte=models.F("worker_completed_at"))
+                ),
+                name="chk_task_completion_time_order",
             ),
         ]
 
@@ -155,12 +160,12 @@ class Task(models.Model):
 class TaskAssignmentRecord(models.Model):
     task = models.ForeignKey(Task, related_name="assignments", on_delete=models.CASCADE)
     worker = models.ForeignKey(
-        User,
+        "api.User",
         related_name="task_assignments_v2",
         on_delete=models.CASCADE,
     )
     assigned_by = models.ForeignKey(
-        User,
+        "api.User",
         db_column="assigned_by",
         related_name="assigned_tasks_v2",
         on_delete=models.SET_NULL,
@@ -171,7 +176,7 @@ class TaskAssignmentRecord(models.Model):
 
     class Meta:
         db_table = "task_assignments"
-        ordering = ["worker__username", "id"]
+        ordering = ["worker__full_name", "id"]
         constraints = [
             models.UniqueConstraint(fields=["task", "worker"], name="uq_task_worker"),
         ]
@@ -190,7 +195,7 @@ class TaskCommentRecord(models.Model):
 
     task = models.ForeignKey(Task, related_name="comments", on_delete=models.CASCADE)
     author = models.ForeignKey(
-        User,
+        "api.User",
         related_name="task_comments_v2",
         on_delete=models.SET_NULL,
         null=True,
@@ -211,7 +216,7 @@ class TaskCommentRecord(models.Model):
 class TaskHistoryEntry(models.Model):
     task = models.ForeignKey(Task, related_name="history_entries", on_delete=models.CASCADE)
     actor = models.ForeignKey(
-        User,
+        "api.User",
         related_name="task_history_entries_v2",
         on_delete=models.SET_NULL,
         null=True,
@@ -239,10 +244,10 @@ class ResourceUsageEntry(models.Model):
     resource_type = models.CharField(max_length=50)
     quantity = models.DecimalField(max_digits=12, decimal_places=2)
     quantity_unit = models.CharField(max_length=30)
-    used_at = models.DateTimeField()
+    used_at = models.DateTimeField(default=timezone.now)
     notes = models.TextField(blank=True)
     recorded_by = models.ForeignKey(
-        User,
+        "api.User",
         db_column="recorded_by",
         related_name="resource_usage_records",
         on_delete=models.SET_NULL,

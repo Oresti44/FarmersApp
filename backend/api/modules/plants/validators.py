@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.modules.plants.models import Plant
+from api import database
 
 
 def validate_plant_payload(data, instance=None):
@@ -14,13 +14,10 @@ def validate_plant_payload(data, instance=None):
     if bool(plot) == bool(greenhouse):
         raise serializers.ValidationError(
             {"area_type": "A plant must belong to exactly one area: a plot or a greenhouse."}
-        )
+    )
 
     if plot:
-        occupant = Plant.objects.filter(plot=plot)
-        if instance:
-            occupant = occupant.exclude(pk=instance.pk)
-        if occupant.exists():
+        if database.plot_has_other_plant(plot, instance=instance):
             raise serializers.ValidationError({"plot_id": "This plot already has a plant assigned."})
 
 

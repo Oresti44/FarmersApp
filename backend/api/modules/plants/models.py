@@ -1,8 +1,5 @@
-from django.contrib.auth import get_user_model
 from django.db import models
-
-
-User = get_user_model()
+from django.utils import timezone
 
 
 class Farm(models.Model):
@@ -10,7 +7,7 @@ class Farm(models.Model):
     description = models.TextField(blank=True)
     location_text = models.CharField(max_length=255, blank=True)
     manager = models.ForeignKey(
-        User,
+        "api.User",
         related_name="managed_farms",
         on_delete=models.SET_NULL,
         null=True,
@@ -51,6 +48,10 @@ class Plot(models.Model):
         ordering = ["farm__name", "name"]
         constraints = [
             models.UniqueConstraint(fields=["farm", "name"], name="uq_plot_name_per_farm"),
+            models.CheckConstraint(
+                check=models.Q(size_value__isnull=True) | models.Q(size_value__gte=0),
+                name="chk_plots_size_non_negative",
+            ),
         ]
 
     def __str__(self):
@@ -79,6 +80,25 @@ class Greenhouse(models.Model):
         ordering = ["farm__name", "name"]
         constraints = [
             models.UniqueConstraint(fields=["farm", "name"], name="uq_greenhouse_name_per_farm"),
+            models.CheckConstraint(
+                check=models.Q(size_value__isnull=True) | models.Q(size_value__gte=0),
+                name="chk_greenhouses_size_non_negative",
+            ),
+            models.CheckConstraint(
+                check=(
+                    models.Q(humidity_target_percent__isnull=True)
+                    | (models.Q(humidity_target_percent__gte=0) & models.Q(humidity_target_percent__lte=100))
+                ),
+                name="chk_greenhouses_humidity_range",
+            ),
+            models.CheckConstraint(
+                check=(
+                    models.Q(temperature_min_c__isnull=True)
+                    | models.Q(temperature_max_c__isnull=True)
+                    | models.Q(temperature_max_c__gte=models.F("temperature_min_c"))
+                ),
+                name="chk_greenhouse_temp_range",
+            ),
         ]
 
     def __str__(self):
@@ -144,6 +164,18 @@ class Plant(models.Model):
                 name="chk_plant_area_exactly_one",
             ),
             models.UniqueConstraint(fields=["plot"], name="uq_one_plant_per_plot"),
+            models.CheckConstraint(
+                check=models.Q(quantity__isnull=True) | models.Q(quantity__gte=0),
+                name="chk_plants_quantity_non_negative",
+            ),
+            models.CheckConstraint(
+                check=(
+                    models.Q(expected_harvest_date__isnull=True)
+                    | models.Q(planted_date__isnull=True)
+                    | models.Q(expected_harvest_date__gte=models.F("planted_date"))
+                ),
+                name="chk_plants_expected_harvest_date",
+            ),
         ]
 
     @property
@@ -165,13 +197,13 @@ class Plant(models.Model):
 
 class HarvestHistoryEntry(models.Model):
     plant = models.ForeignKey(Plant, related_name="harvest_history", on_delete=models.CASCADE)
-    harvested_at = models.DateTimeField()
+    harvested_at = models.DateTimeField(default=timezone.now)
     quantity = models.DecimalField(max_digits=12, decimal_places=2)
     quantity_unit = models.CharField(max_length=30, default="kg")
     quality_grade = models.CharField(max_length=50, blank=True)
     notes = models.TextField(blank=True)
     recorded_by = models.ForeignKey(
-        User,
+        "api.User",
         db_column="recorded_by",
         related_name="harvest_records",
         on_delete=models.SET_NULL,

@@ -3,9 +3,19 @@ from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-from django.db import connection, transaction
+from django.db import transaction
 from django.utils import timezone
 
+from api.modules.finance.models import (
+    ExpenseCategory,
+    ExpenseRecord,
+    FinancePartner,
+    FinanceTransaction,
+    RecurringExpense,
+    SalesDeal,
+    SalesDelivery,
+)
+from api.modules.inventory.models import InventoryCategory, InventoryItem, InventoryMovement
 from api.modules.plants.models import Farm, Greenhouse, HarvestHistoryEntry, Plant, PlantStage, Plot
 from api.modules.tasks.models import (
     RecurringTaskPlan,
@@ -22,10 +32,8 @@ User = get_user_model()
 
 DEMO_FARM_NAME = "Demo Valley Farm"
 DEMO_MANAGER = {
-    "username": "demo_manager",
     "email": "manager@demo.farm",
-    "first_name": "Mira",
-    "last_name": "Kola",
+    "full_name": "Mira Kola",
     "password": "Demo12345!",
 }
 DEMO_WORKERS = [
@@ -268,6 +276,83 @@ GREENHOUSE_PLANT_SPECS = [
     ("GH-04", "Pepper", "Hungarian Wax", "Flowering", "active", Decimal("195.00"), "plants", 58, 19, "Set looks uneven near exhaust fans."),
     ("GH-04", "Eggplant", "Classic", "Fruiting", "active", Decimal("160.00"), "plants", 67, 14, "Requires scouting for mites twice weekly."),
 ]
+FINANCE_PARTNER_SPECS = [
+    {
+        "name": "Tirana Fresh Market",
+        "partner_type": "buyer",
+        "contact_person": "Besnik Dervishi",
+        "phone": "+355 69 221 1001",
+        "email": "orders@tiranafresh.example",
+        "address_text": "Wholesale Market, Tirana",
+        "notes": "Buys weekly tomato, pepper, lettuce, and herb deliveries.",
+    },
+    {
+        "name": "GreenLeaf Restaurants",
+        "partner_type": "buyer",
+        "contact_person": "Elona Keta",
+        "phone": "+355 68 441 2200",
+        "email": "produce@greenleaf.example",
+        "address_text": "Rruga e Durresit, Tirana",
+        "notes": "Prefers smaller high-quality herb and lettuce orders.",
+    },
+    {
+        "name": "AgroSupply Albania",
+        "partner_type": "supplier",
+        "contact_person": "Artan Lleshi",
+        "phone": "+355 67 332 8800",
+        "email": "sales@agrosupply.example",
+        "address_text": "Industrial Zone, Lushnje",
+        "notes": "Main supplier for nutrients, substrate, labels, and crop protection.",
+    },
+    {
+        "name": "Lushnje Utility Service",
+        "partner_type": "utility_provider",
+        "contact_person": "Customer Service",
+        "phone": "+355 44 100 900",
+        "email": "billing@lushnjeutility.example",
+        "address_text": "Lushnje",
+        "notes": "Water and electricity provider for irrigation and greenhouse systems.",
+    },
+    {
+        "name": "Seasonal Harvest Crew",
+        "partner_type": "other",
+        "contact_person": "Crew Coordinator",
+        "phone": "+355 69 770 3344",
+        "email": "crew@seasonal.example",
+        "address_text": "Fier and Lushnje region",
+        "notes": "External labor team used during peak harvest windows.",
+    },
+]
+EXPENSE_CATEGORY_SPECS = [
+    ("Utilities", "recurring", "Electricity and water charges for irrigation and greenhouses."),
+    ("Labor Wages", "wages", "Worker wages and seasonal crew payments."),
+    ("Fertilizer and Nutrients", "operational", "Nutrient mixes, compost, and soil amendments."),
+    ("Crop Protection", "operational", "Sprays, scouting supplies, and biological controls."),
+    ("Packaging", "operational", "Crates, labels, bags, and delivery packaging."),
+    ("Tools and Maintenance", "tools", "Tool replacement, irrigation repairs, and maintenance materials."),
+]
+INVENTORY_CATEGORY_SPECS = [
+    ("Fertilizer", "Plant nutrition and soil amendments."),
+    ("Crop Protection", "Organic sprays, sticky traps, and pest controls."),
+    ("Packaging", "Crates, boxes, labels, and market bags."),
+    ("Irrigation", "Drip lines, emitters, filters, and fittings."),
+    ("Seeds and Seedlings", "Seed packets, plug trays, and young plants."),
+    ("Tools", "Hand tools, PPE, and greenhouse accessories."),
+]
+INVENTORY_ITEM_SPECS = [
+    ("Fertilizer", "Calcium nitrate", "kg", Decimal("124.50"), Decimal("35.00"), "Nutrient shed A", "Used in fruiting crop feed plans."),
+    ("Fertilizer", "Organic compost", "bags", Decimal("58.00"), Decimal("15.00"), "Compost bay", "Applied to plot rotations and bed refreshes."),
+    ("Crop Protection", "Biofungicide concentrate", "liters", Decimal("18.75"), Decimal("6.00"), "Locked chemical cabinet", "Used for targeted fungal pressure treatment."),
+    ("Crop Protection", "Yellow sticky traps", "units", Decimal("340.00"), Decimal("80.00"), "Greenhouse store", "Monitoring cards for thrips and whitefly scouting."),
+    ("Packaging", "Reusable harvest crates", "units", Decimal("220.00"), Decimal("60.00"), "Cold room staging", "Crates used for internal harvest movement."),
+    ("Packaging", "Printed market labels", "rolls", Decimal("26.00"), Decimal("8.00"), "Packing desk", "Labels for buyer orders and lot tracking."),
+    ("Irrigation", "16mm drip line", "meters", Decimal("450.00"), Decimal("120.00"), "Irrigation store", "Replacement drip line for plots and tunnels."),
+    ("Irrigation", "Pressure filters", "units", Decimal("14.00"), Decimal("4.00"), "Pump room", "Filters for greenhouse irrigation circuits."),
+    ("Seeds and Seedlings", "Lettuce seed packet", "packets", Decimal("38.00"), Decimal("10.00"), "Seed cabinet", "Succession planting stock for leafy greens."),
+    ("Seeds and Seedlings", "Tomato plug trays", "trays", Decimal("72.00"), Decimal("20.00"), "Propagation House", "Starter trays for greenhouse tomatoes."),
+    ("Tools", "Pruning snips", "units", Decimal("24.00"), Decimal("6.00"), "Tool rack", "Daily pruning and harvest preparation tool."),
+    ("Tools", "Nitrile gloves", "boxes", Decimal("31.00"), Decimal("10.00"), "PPE shelf", "Required for crop protection and sanitation work."),
+]
 
 
 class Command(BaseCommand):
@@ -284,6 +369,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options["reset"]:
             self._reset_demo_data()
+        verbose = options.get("verbosity", 1) > 0
 
         stage_map = self._ensure_stages()
         manager, workers = self._create_users()
@@ -293,25 +379,37 @@ class Command(BaseCommand):
         plants = self._create_plants(stage_map, plots, greenhouses)
         recurring_plans = self._create_recurring_plans(plants, manager)
         stats = self._create_task_ecosystem(plants, recurring_plans, manager, workers)
+        tasks = list(Task.objects.filter(plant__in=plants).order_by("scheduled_start_at", "id"))
+        harvests = list(HarvestHistoryEntry.objects.filter(plant__in=plants).order_by("harvested_at", "id"))
+        inventory_stats = self._create_inventory_data(farm, plants, tasks, manager)
+        finance_stats = self._create_finance_data(farm, plants, tasks, harvests, manager, workers)
 
-        self.stdout.write(self.style.SUCCESS("Demo data seeded successfully."))
-        self.stdout.write(f"Farm: {farm.name}")
-        self.stdout.write(f"Manager login: {DEMO_MANAGER['username']} / {DEMO_MANAGER['password']}")
-        self.stdout.write("Worker password for all demo workers: Demo12345!")
-        self.stdout.write(
-            "Created "
-            f"{len(plots)} plots, {len(greenhouses)} greenhouses, {len(plants)} plants, "
-            f"{len(recurring_plans)} recurring plans, {stats['tasks']} tasks, "
-            f"{stats['assignments']} assignments, {stats['comments']} comments, "
-            f"{stats['history']} history entries, {stats['resource_usage']} resource logs, "
-            f"and {stats['harvests']} harvest records."
-        )
+        if verbose:
+            self.stdout.write(self.style.SUCCESS("Demo data seeded successfully."))
+            self.stdout.write(f"Farm: {farm.name}")
+            self.stdout.write(f"Manager login: {DEMO_MANAGER['email']} / {DEMO_MANAGER['password']}")
+            self.stdout.write("Worker password for all demo workers: Demo12345!")
+            self.stdout.write(
+                "Created "
+                f"{len(plots)} plots, {len(greenhouses)} greenhouses, {len(plants)} plants, "
+                f"{len(recurring_plans)} recurring plans, {stats['tasks']} tasks, "
+                f"{stats['assignments']} assignments, {stats['comments']} comments, "
+                f"{stats['history']} history entries, {stats['resource_usage']} resource logs, "
+                f"{stats['harvests']} harvest records, "
+                f"{inventory_stats['categories']} inventory categories, {inventory_stats['items']} inventory items, "
+                f"{inventory_stats['movements']} inventory movements, "
+                f"{finance_stats['partners']} finance partners, {finance_stats['expense_categories']} expense categories, "
+                f"{finance_stats['recurring_expenses']} recurring expenses, {finance_stats['expense_records']} expense records, "
+                f"{finance_stats['sales_deals']} sales deals, {finance_stats['sales_deliveries']} sales deliveries, "
+                f"and {finance_stats['finance_transactions']} finance transactions."
+            )
 
     def _reset_demo_data(self):
         Farm.objects.filter(name=DEMO_FARM_NAME).delete()
-        with connection.cursor() as cursor:
-            cursor.execute("DELETE FROM users WHERE email LIKE %s", ["%@demo.farm"])
-        User.objects.filter(username__startswith="demo_").delete()
+        User.objects.filter(email__endswith="@demo.farm").delete()
+        FinancePartner.objects.filter(name__in=[spec["name"] for spec in FINANCE_PARTNER_SPECS]).delete()
+        ExpenseCategory.objects.filter(name__in=[name for name, _, _ in EXPENSE_CATEGORY_SPECS]).delete()
+        InventoryCategory.objects.filter(name__in=[name for name, _ in INVENTORY_CATEGORY_SPECS]).delete()
 
     def _ensure_stages(self):
         stages = {}
@@ -325,36 +423,28 @@ class Command(BaseCommand):
 
     def _create_users(self):
         manager, _ = User.objects.update_or_create(
-            username=DEMO_MANAGER["username"],
+            email=DEMO_MANAGER["email"],
             defaults={
-                "email": DEMO_MANAGER["email"],
-                "first_name": DEMO_MANAGER["first_name"],
-                "last_name": DEMO_MANAGER["last_name"],
-                "is_staff": True,
-                "is_superuser": False,
+                "full_name": DEMO_MANAGER["full_name"],
+                "role": "manager",
                 "is_active": True,
             },
         )
         manager.set_password(DEMO_MANAGER["password"])
         manager.save()
-        self._sync_raw_user(manager, role="manager")
 
         workers = []
         for username, first_name, last_name in DEMO_WORKERS:
             worker, _ = User.objects.update_or_create(
-                username=username,
+                email=f"{username}@demo.farm",
                 defaults={
-                    "email": f"{username}@demo.farm",
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "is_staff": False,
-                    "is_superuser": False,
+                    "full_name": f"{first_name} {last_name}",
+                    "role": "worker",
                     "is_active": True,
                 },
             )
             worker.set_password("Demo12345!")
             worker.save()
-            self._sync_raw_user(worker, role="worker")
             workers.append(worker)
         return manager, workers
 
@@ -615,6 +705,378 @@ class Command(BaseCommand):
                     stats["harvests"] += 1
 
         return stats
+
+    def _create_inventory_data(self, farm, plants, tasks, manager):
+        categories = {}
+        for name, description in INVENTORY_CATEGORY_SPECS:
+            category, _ = InventoryCategory.objects.update_or_create(
+                name=name,
+                defaults={"description": description},
+            )
+            categories[name] = category
+
+        items = []
+        for category_name, name, unit, quantity, threshold, storage_location, notes in INVENTORY_ITEM_SPECS:
+            item = InventoryItem.objects.create(
+                farm=farm,
+                category=categories[category_name],
+                name=name,
+                unit=unit,
+                current_quantity=quantity,
+                low_stock_threshold=threshold,
+                storage_location=storage_location,
+                status="active",
+                notes=notes,
+            )
+            items.append(item)
+
+        now = timezone.now()
+        movements = []
+        for index, item in enumerate(items):
+            stock_in_quantity = item.current_quantity + item.low_stock_threshold
+            movements.append(
+                InventoryMovement.objects.create(
+                    inventory_item=item,
+                    movement_type="stock_in",
+                    quantity=stock_in_quantity,
+                    movement_date=now - timedelta(days=30 - index),
+                    note=f"Opening stock received for {item.name}.",
+                    created_by=manager,
+                )
+            )
+
+        linked_specs = [
+            ("Calcium nitrate", "stock_out", Decimal("16.50"), "fertilizing", "Nutrients issued for crop feed tasks."),
+            ("Biofungicide concentrate", "stock_out", Decimal("3.25"), "spraying", "Crop protection used during scouting treatment."),
+            ("Reusable harvest crates", "stock_out", Decimal("18.00"), "harvesting", "Crates moved to harvest staging."),
+            ("Printed market labels", "stock_out", Decimal("4.00"), "harvesting", "Labels consumed for buyer deliveries."),
+            ("16mm drip line", "stock_out", Decimal("35.00"), "irrigation", "Drip line used for repairs after pressure check."),
+            ("Pressure filters", "adjustment", Decimal("1.00"), "irrigation", "One filter corrected after physical count."),
+            ("Pruning snips", "stock_out", Decimal("2.00"), "maintenance", "Snips assigned to pruning crew."),
+            ("Nitrile gloves", "stock_out", Decimal("5.00"), "spraying", "PPE used for crop protection and sanitation work."),
+        ]
+        item_by_name = {item.name: item for item in items}
+        for index, (item_name, movement_type, quantity, category, note) in enumerate(linked_specs):
+            task = self._first_task(tasks, category=category) or (tasks[index % len(tasks)] if tasks else None)
+            movements.append(
+                InventoryMovement.objects.create(
+                    inventory_item=item_by_name[item_name],
+                    movement_type=movement_type,
+                    quantity=quantity,
+                    movement_date=now - timedelta(days=6 - index % 4, hours=index),
+                    task=task,
+                    plant=task.plant if task else plants[index % len(plants)],
+                    note=note,
+                    created_by=manager,
+                )
+            )
+
+        return {
+            "categories": len(categories),
+            "items": len(items),
+            "movements": len(movements),
+        }
+
+    def _create_finance_data(self, farm, plants, tasks, harvests, manager, workers):
+        partners = {}
+        for spec in FINANCE_PARTNER_SPECS:
+            partner = FinancePartner.objects.filter(name=spec["name"]).first()
+            if partner:
+                for field, value in spec.items():
+                    setattr(partner, field, value)
+                partner.save()
+            else:
+                partner = FinancePartner.objects.create(**spec)
+            partners[partner.name] = partner
+
+        expense_categories = {}
+        for name, category_type, description in EXPENSE_CATEGORY_SPECS:
+            category, _ = ExpenseCategory.objects.update_or_create(
+                name=name,
+                defaults={"category_type": category_type, "description": description},
+            )
+            expense_categories[name] = category
+
+        today = timezone.localdate()
+        now = timezone.now()
+        recurring_expenses = [
+            RecurringExpense.objects.create(
+                farm=farm,
+                category=expense_categories["Utilities"],
+                partner=partners["Lushnje Utility Service"],
+                title="Greenhouse electricity subscription",
+                description="Monthly electricity plan covering fans, pumps, and greenhouse controls.",
+                amount=Decimal("1180.00"),
+                frequency="monthly",
+                start_date=today - timedelta(days=150),
+                end_date=None,
+                next_due_date=today + timedelta(days=12),
+                status="active",
+                created_by=manager,
+                last_updated_by=manager,
+            ),
+            RecurringExpense.objects.create(
+                farm=farm,
+                category=expense_categories["Utilities"],
+                partner=partners["Lushnje Utility Service"],
+                title="Irrigation water service",
+                description="Recurring water service bill for field and greenhouse irrigation.",
+                amount=Decimal("420.00"),
+                frequency="monthly",
+                start_date=today - timedelta(days=180),
+                end_date=None,
+                next_due_date=today + timedelta(days=8),
+                status="active",
+                created_by=manager,
+                last_updated_by=manager,
+            ),
+            RecurringExpense.objects.create(
+                farm=farm,
+                category=expense_categories["Labor Wages"],
+                partner=partners["Seasonal Harvest Crew"],
+                title="Peak harvest crew retainer",
+                description="Weekly retainer used when harvest windows overlap.",
+                amount=Decimal("760.00"),
+                frequency="weekly",
+                start_date=today - timedelta(days=42),
+                end_date=today + timedelta(days=35),
+                next_due_date=today + timedelta(days=5),
+                status="active",
+                created_by=manager,
+                last_updated_by=manager,
+            ),
+        ]
+
+        expense_specs = [
+            {
+                "category": "Utilities",
+                "partner": "Lushnje Utility Service",
+                "recurring": recurring_expenses[0],
+                "task": None,
+                "plant": None,
+                "title": "March greenhouse electricity bill",
+                "description": "Paid electricity bill for ventilation, pumps, and climate controls.",
+                "expense_kind": "recurring_instance",
+                "amount": Decimal("1168.40"),
+                "expense_date": today - timedelta(days=24),
+                "due_date": today - timedelta(days=14),
+                "payment_status": "paid",
+            },
+            {
+                "category": "Utilities",
+                "partner": "Lushnje Utility Service",
+                "recurring": recurring_expenses[1],
+                "task": self._first_task(tasks, category="irrigation"),
+                "plant": self._first_task(tasks, category="irrigation").plant if self._first_task(tasks, category="irrigation") else None,
+                "title": "Irrigation water bill",
+                "description": "Water usage for field and tunnel irrigation cycles.",
+                "expense_kind": "recurring_instance",
+                "amount": Decimal("438.75"),
+                "expense_date": today - timedelta(days=18),
+                "due_date": today - timedelta(days=10),
+                "payment_status": "paid",
+            },
+            {
+                "category": "Fertilizer and Nutrients",
+                "partner": "AgroSupply Albania",
+                "recurring": None,
+                "task": self._first_task(tasks, category="fertilizing"),
+                "plant": self._first_task(tasks, category="fertilizing").plant if self._first_task(tasks, category="fertilizing") else plants[0],
+                "title": "Calcium nitrate and micronutrient order",
+                "description": "Nutrient purchase linked to active greenhouse fruiting crops.",
+                "expense_kind": "manual",
+                "amount": Decimal("684.30"),
+                "expense_date": today - timedelta(days=11),
+                "due_date": today - timedelta(days=5),
+                "payment_status": "paid",
+            },
+            {
+                "category": "Crop Protection",
+                "partner": "AgroSupply Albania",
+                "recurring": None,
+                "task": self._first_task(tasks, category="spraying"),
+                "plant": self._first_task(tasks, category="spraying").plant if self._first_task(tasks, category="spraying") else plants[1],
+                "title": "Biofungicide and sticky trap restock",
+                "description": "Materials for scouting and spot treatments in flowering and fruiting blocks.",
+                "expense_kind": "manual",
+                "amount": Decimal("312.90"),
+                "expense_date": today - timedelta(days=6),
+                "due_date": today + timedelta(days=9),
+                "payment_status": "pending",
+            },
+            {
+                "category": "Packaging",
+                "partner": "AgroSupply Albania",
+                "recurring": None,
+                "task": self._first_task(tasks, category="harvesting"),
+                "plant": self._first_task(tasks, category="harvesting").plant if self._first_task(tasks, category="harvesting") else plants[2],
+                "title": "Crates and market labels",
+                "description": "Packaging materials used for buyer delivery lots.",
+                "expense_kind": "manual",
+                "amount": Decimal("245.60"),
+                "expense_date": today - timedelta(days=4),
+                "due_date": today + timedelta(days=3),
+                "payment_status": "paid",
+            },
+            {
+                "category": "Labor Wages",
+                "partner": "Seasonal Harvest Crew",
+                "recurring": recurring_expenses[2],
+                "task": self._first_task(tasks, category="harvesting"),
+                "plant": None,
+                "title": "Weekly harvest crew wages",
+                "description": "Wages for additional crew during lettuce, tomato, and herb harvests.",
+                "expense_kind": "wage",
+                "amount": Decimal("760.00"),
+                "expense_date": today - timedelta(days=2),
+                "due_date": today,
+                "payment_status": "paid",
+                "worker": workers[0],
+                "pay_period_start": today - timedelta(days=9),
+                "pay_period_end": today - timedelta(days=3),
+            },
+            {
+                "category": "Tools and Maintenance",
+                "partner": "AgroSupply Albania",
+                "recurring": None,
+                "task": self._first_task(tasks, category="maintenance"),
+                "plant": self._first_task(tasks, category="maintenance").plant if self._first_task(tasks, category="maintenance") else plants[3],
+                "title": "Drip repair fittings and pruning supplies",
+                "description": "Repair parts and consumables for active maintenance work.",
+                "expense_kind": "manual",
+                "amount": Decimal("198.20"),
+                "expense_date": today - timedelta(days=1),
+                "due_date": today + timedelta(days=14),
+                "payment_status": "pending",
+            },
+        ]
+
+        expenses = []
+        for index, spec in enumerate(expense_specs):
+            record = ExpenseRecord.objects.create(
+                farm=farm,
+                category=expense_categories[spec["category"]],
+                partner=partners[spec["partner"]],
+                recurring_expense=spec.get("recurring"),
+                task=spec.get("task"),
+                plant=spec.get("plant"),
+                title=spec["title"],
+                description=spec["description"],
+                expense_kind=spec["expense_kind"],
+                amount=spec["amount"],
+                expense_date=spec["expense_date"],
+                due_date=spec["due_date"],
+                payment_status=spec["payment_status"],
+                worker=spec.get("worker"),
+                pay_period_start=spec.get("pay_period_start"),
+                pay_period_end=spec.get("pay_period_end"),
+                recorded_by=manager,
+            )
+            self._set_auto_timestamp(
+                record,
+                now - timedelta(days=12 - index, hours=2),
+                now - timedelta(days=11 - index, hours=1),
+            )
+            expenses.append(record)
+
+        sales_deals = []
+        deal_specs = [
+            ("Tomato weekly wholesale contract", "Tirana Fresh Market", self._first_plant(plants, "Tomato"), "Fresh tomatoes", Decimal("85.00"), "kg", Decimal("1.85")),
+            ("Leafy greens restaurant supply", "GreenLeaf Restaurants", self._first_plant(plants, "Lettuce"), "Lettuce and leafy greens", Decimal("48.00"), "kg", Decimal("2.40")),
+            ("Mixed herb standing order", "GreenLeaf Restaurants", self._first_plant(plants, "Basil"), "Fresh culinary herbs", Decimal("22.00"), "kg", Decimal("4.60")),
+        ]
+        for index, (title, buyer_name, plant, product_name, quantity, unit, unit_price) in enumerate(deal_specs):
+            deal = SalesDeal.objects.create(
+                farm=farm,
+                buyer=partners[buyer_name],
+                plant=plant,
+                title=title,
+                description=f"Recurring buyer agreement for {product_name.lower()} from {farm.name}.",
+                product_name=product_name,
+                agreed_quantity=quantity,
+                quantity_unit=unit,
+                frequency="weekly",
+                interval_value=1,
+                unit_price=unit_price,
+                start_date=today - timedelta(days=35 + index * 7),
+                end_date=today + timedelta(days=55 + index * 10),
+                status="active",
+                created_by=manager,
+                last_updated_by=manager,
+            )
+            self._set_auto_timestamp(deal, now - timedelta(days=35 + index * 5), now - timedelta(days=6 + index))
+            sales_deals.append(deal)
+
+        deliveries = []
+        for index, deal in enumerate(sales_deals):
+            harvest = harvests[index % len(harvests)] if harvests else None
+            quantity = deal.agreed_quantity - Decimal(index * 4)
+            delivered_date = today - timedelta(days=5 - index)
+            delivery = SalesDelivery.objects.create(
+                deal=deal,
+                harvest_history=harvest,
+                scheduled_date=delivered_date - timedelta(days=1),
+                delivered_date=delivered_date if index < 2 else None,
+                quantity_delivered=quantity,
+                quantity_unit=deal.quantity_unit,
+                unit_price=deal.unit_price,
+                total_amount=quantity * deal.unit_price,
+                payment_status="paid" if index < 2 else "pending",
+                due_date=delivered_date + timedelta(days=7),
+                notes=f"Delivery lot for {deal.product_name}; linked to harvest record when available.",
+                recorded_by=manager,
+            )
+            self._set_auto_timestamp(delivery, now - timedelta(days=6 - index), now - timedelta(days=4 - index))
+            deliveries.append(delivery)
+
+        transactions = []
+        for index, expense in enumerate([expense for expense in expenses if expense.payment_status == "paid"]):
+            transaction = FinanceTransaction.objects.create(
+                farm=farm,
+                transaction_type="expense",
+                source_type="expense_record",
+                expense_record=expense,
+                sales_delivery=None,
+                transaction_date=expense.expense_date,
+                amount=expense.amount,
+                payment_method="bank_transfer" if index % 2 == 0 else "cash",
+                note=f"Payment recorded for expense: {expense.title}.",
+                created_by=manager,
+            )
+            self._set_created_timestamp(transaction, now - timedelta(days=9 - index))
+            transactions.append(transaction)
+
+        for index, delivery in enumerate([delivery for delivery in deliveries if delivery.payment_status == "paid"]):
+            transaction = FinanceTransaction.objects.create(
+                farm=farm,
+                transaction_type="income",
+                source_type="sale_delivery",
+                expense_record=None,
+                sales_delivery=delivery,
+                transaction_date=delivery.delivered_date,
+                amount=delivery.total_amount,
+                payment_method="bank_transfer",
+                note=f"Buyer payment received for delivery: {delivery.deal.title}.",
+                created_by=manager,
+            )
+            self._set_created_timestamp(transaction, now - timedelta(days=3 - index))
+            transactions.append(transaction)
+
+        return {
+            "partners": len(partners),
+            "expense_categories": len(expense_categories),
+            "recurring_expenses": len(recurring_expenses),
+            "expense_records": len(expenses),
+            "sales_deals": len(sales_deals),
+            "sales_deliveries": len(deliveries),
+            "finance_transactions": len(transactions),
+        }
+
+    def _first_task(self, tasks, category):
+        return next((task for task in tasks if task.category == category), None)
+
+    def _first_plant(self, plants, name_part):
+        return next((plant for plant in plants if name_part.lower() in plant.name.lower()), plants[0])
 
     def _build_task_specs(self, plant, index, now, recurring_plan):
         stage_name = plant.stage.name.lower()
@@ -1208,21 +1670,3 @@ class Command(BaseCommand):
     def _set_created_timestamp(self, instance, created_at):
         instance.__class__.objects.filter(pk=instance.pk).update(created_at=created_at)
         instance.created_at = created_at
-
-    def _sync_raw_user(self, user, role):
-        full_name = user.get_full_name().strip() or user.username
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                INSERT INTO users (id, full_name, email, password_hash, role, is_active, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
-                ON CONFLICT (id) DO UPDATE SET
-                    full_name = EXCLUDED.full_name,
-                    email = EXCLUDED.email,
-                    password_hash = EXCLUDED.password_hash,
-                    role = EXCLUDED.role,
-                    is_active = EXCLUDED.is_active,
-                    updated_at = NOW()
-                """,
-                [user.id, full_name, user.email, user.password, role, user.is_active],
-            )

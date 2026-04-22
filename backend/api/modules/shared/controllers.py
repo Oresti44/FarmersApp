@@ -1,13 +1,9 @@
-from django.contrib.auth import get_user_model
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from api.modules.plants.models import Farm, PlantStage
+from api import database
 from api.modules.plants.serializers import FarmSummarySerializer, PlantStageSummarySerializer
 from api.modules.shared.serializers import UserSlimSerializer
-
-
-User = get_user_model()
 
 
 @api_view(["GET"])
@@ -31,16 +27,12 @@ def health_check(request):
 
 @api_view(["GET"])
 def ui_meta(request):
-    users = User.objects.order_by("username")
-    workers = users.filter(is_staff=False, is_superuser=False)
+    users = database.users_queryset()
     return Response(
         {
-            "farms": FarmSummarySerializer(Farm.objects.order_by("name"), many=True).data,
-            "plant_stages": PlantStageSummarySerializer(
-                PlantStage.objects.order_by("sort_order", "name"),
-                many=True,
-            ).data,
+            "farms": FarmSummarySerializer(database.farms_queryset(), many=True).data,
+            "plant_stages": PlantStageSummarySerializer(database.plant_stages_queryset(), many=True).data,
             "users": UserSlimSerializer(users, many=True).data,
-            "workers": UserSlimSerializer(workers, many=True).data,
+            "workers": UserSlimSerializer(database.workers_queryset(), many=True).data,
         }
     )
