@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from api import database
+from api.modules.inventory.serializers import InventoryCategorySerializer
 from api.modules.plants.serializers import FarmSummarySerializer, PlantStageSummarySerializer
 from api.modules.shared.serializers import UserSlimSerializer
 
@@ -31,6 +32,7 @@ def ui_meta(request):
     return Response(
         {
             "farms": FarmSummarySerializer(database.farms_queryset(), many=True).data,
+            "inventory_categories": InventoryCategorySerializer(database.inventory_categories_queryset(), many=True).data,
             "plant_stages": PlantStageSummarySerializer(database.plant_stages_queryset(), many=True).data,
             "users": UserSlimSerializer(users, many=True).data,
             "workers": UserSlimSerializer(database.workers_queryset(), many=True).data,

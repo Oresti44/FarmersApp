@@ -1,10 +1,12 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.db import models, transaction
 from django.db.models import Count, Prefetch, Q
 from django.utils import timezone
 
+from api.modules.inventory.models import InventoryCategory, InventoryItem, InventoryMovement
 from api.modules.plants.models import Farm, Greenhouse, HarvestHistoryEntry, Plant, PlantStage, Plot
 from api.modules.tasks.models import (
     RecurringTaskPlan,
@@ -37,6 +39,10 @@ def workers_queryset():
 
 def farms_queryset():
     return Farm.objects.order_by("name")
+
+
+def inventory_categories_queryset():
+    return InventoryCategory.objects.order_by("name")
 
 
 def plant_stages_queryset():
@@ -176,6 +182,230 @@ def plant_resource_usage(plant):
 
 def task_resource_usage(task):
     return ResourceUsageEntry.objects.filter(task=task).order_by("-used_at")
+
+
+def inventory_items_queryset():
+    return (
+        InventoryItem.objects.select_related("farm", "category")
+        .prefetch_related(
+            Prefetch(
+                "movements",
+                queryset=InventoryMovement.objects.select_related(
+                    "inventory_item__farm",
+                    "inventory_item__category",
+                    "task",
+                    "plant",
+                    "created_by",
+                ).order_by("-movement_date", "-id"),
+            )
+        )
+        .order_by("farm__name", "name")
+    )
+
+
+def get_inventory_item(pk):
+    return inventory_items_queryset().get(pk=pk)
+
+
+def filter_inventory_items(queryset, params):
+    if status_value := params.get("status"):
+        queryset = queryset.filter(status=status_value)
+    if farm := params.get("farm"):
+        queryset = queryset.filter(farm_id=farm)
+    if category := params.get("category"):
+        queryset = queryset.filter(category_id=category)
+    if params.get("low_stock") == "true":
+        queryset = queryset.filter(current_quantity__lte=models.F("low_stock_threshold"))
+    if params.get("show_archived") != "true":
+        queryset = queryset.exclude(status="archived")
+    if search := params.get("search"):
+        queryset = queryset.filter(
+            Q(name__icontains=search)
+            | Q(storage_location__icontains=search)
+            | Q(notes__icontains=search)
+            | Q(category__name__icontains=search)
+            | Q(farm__name__icontains=search)
+        )
+    return queryset.distinct()
+
+
+def inventory_movements_queryset():
+    return (
+        InventoryMovement.objects.select_related(
+            "inventory_item__farm",
+            "inventory_item__category",
+            "task",
+            "plant",
+            "created_by",
+        )
+        .order_by("-movement_date", "-id")
+    )
+
+
+def get_inventory_movement(pk):
+    return inventory_movements_queryset().get(pk=pk)
+
+
+def filter_inventory_movements(queryset, params):
+    if item := params.get("item"):
+        queryset = queryset.filter(inventory_item_id=item)
+    if farm := params.get("farm"):
+        queryset = queryset.filter(inventory_item__farm_id=farm)
+    if movement_type := params.get("movement_type"):
+        queryset = queryset.filter(movement_type=movement_type)
+    if plant := params.get("plant"):
+        queryset = queryset.filter(plant_id=plant)
+    if task := params.get("task"):
+        queryset = queryset.filter(task_id=task)
+    if date_from := params.get("date_from"):
+        queryset = queryset.filter(movement_date__date__gte=date_from)
+    if date_to := params.get("date_to"):
+        queryset = queryset.filter(movement_date__date__lte=date_to)
+    if search := params.get("search"):
+        queryset = queryset.filter(
+            Q(inventory_item__name__icontains=search)
+            | Q(inventory_item__category__name__icontains=search)
+            | Q(note__icontains=search)
+            | Q(plant__name__icontains=search)
+            | Q(task__title__icontains=search)
+        )
+    return queryset.distinct()
+
+
+def inventory_item_delete_impact(item):
+    return {
+        "inventory_items": 1,
+        "inventory_movements": item.movements.count(),
+    }
+
+
+@transaction.atomic
+def delete_inventory_item(item):
+    impact = inventory_item_delete_impact(item)
+    item.delete()
+    return impact
+
+
+def _movement_delta(movement_type, quantity, current_quantity=None):
+    if movement_type == "stock_in":
+        return quantity
+    if movement_type in ["stock_out", "waste"]:
+        return -quantity
+    if movement_type == "adjustment":
+        if current_quantity is None:
+            raise ValidationError("Adjustment requires current quantity.")
+        return quantity - current_quantity
+    return quantity
+
+
+def _validate_inventory_level(item, delta):
+    if item.current_quantity + delta < 0:
+        raise ValidationError(f"Movement would reduce {item.name} below zero.")
+
+
+@transaction.atomic
+def create_inventory_movement(validated_data):
+    created_by_id = validated_data.pop("created_by_id", None)
+    item = validated_data["inventory_item"]
+    delta = _movement_delta(validated_data["movement_type"], validated_data["quantity"], item.current_quantity)
+    _validate_inventory_level(item, delta)
+    item.current_quantity += delta
+    item.save(update_fields=["current_quantity", "updated_at"])
+    return InventoryMovement.objects.create(created_by_id=created_by_id, **validated_data)
+
+
+@transaction.atomic
+def update_inventory_movement(movement, validated_data):
+    original_type = movement.movement_type
+    next_type = validated_data.get("movement_type", original_type)
+    if original_type == "adjustment" or next_type == "adjustment":
+        raise ValidationError("Adjustment movements cannot be edited. Create a new adjustment instead.")
+
+    item = validated_data.get("inventory_item", movement.inventory_item)
+    if item.pk != movement.inventory_item_id:
+        old_item = movement.inventory_item
+        old_item.current_quantity -= _movement_delta(movement.movement_type, movement.quantity, old_item.current_quantity)
+        _validate_inventory_level(old_item, 0)
+        old_item.save(update_fields=["current_quantity", "updated_at"])
+
+    current_item = item
+    if current_item.pk == movement.inventory_item_id:
+        reverse_delta = -_movement_delta(movement.movement_type, movement.quantity, current_item.current_quantity)
+        apply_delta = _movement_delta(next_type, validated_data.get("quantity", movement.quantity), current_item.current_quantity + reverse_delta)
+        final_delta = reverse_delta + apply_delta
+        _validate_inventory_level(current_item, final_delta)
+        current_item.current_quantity += final_delta
+        current_item.save(update_fields=["current_quantity", "updated_at"])
+    else:
+        new_delta = _movement_delta(next_type, validated_data.get("quantity", movement.quantity), current_item.current_quantity)
+        _validate_inventory_level(current_item, new_delta)
+        current_item.current_quantity += new_delta
+        current_item.save(update_fields=["current_quantity", "updated_at"])
+
+    for field, value in validated_data.items():
+        if field == "created_by_id":
+            movement.created_by_id = value
+        else:
+            setattr(movement, field, value)
+    movement.save()
+    return movement
+
+
+@transaction.atomic
+def delete_inventory_movement(movement):
+    if movement.movement_type == "adjustment":
+        raise ValidationError("Adjustment movements cannot be deleted because they represent a stock reset.")
+    item = movement.inventory_item
+    delta = -_movement_delta(movement.movement_type, movement.quantity, item.current_quantity)
+    _validate_inventory_level(item, delta)
+    item.current_quantity += delta
+    item.save(update_fields=["current_quantity", "updated_at"])
+    movement.delete()
+    return {"inventory_movements": 1, "inventory_items_updated": 1}
+
+
+def inventory_dashboard(queryset):
+    recent_movements = inventory_movements_queryset()[:10]
+    low_stock_items = queryset.filter(current_quantity__lte=models.F("low_stock_threshold")).order_by(
+        "current_quantity",
+        "name",
+    )[:8]
+    category_counts = queryset.values("category__name").annotate(count=Count("id")).order_by("-count", "category__name")
+    farm_counts = queryset.values("farm__name").annotate(count=Count("id")).order_by("-count", "farm__name")
+
+    return {
+        "summary": {
+            "active_items": queryset.filter(status="active").count(),
+            "low_stock_items": queryset.filter(current_quantity__lte=models.F("low_stock_threshold")).count(),
+            "archived_items": queryset.filter(status="archived").count(),
+            "total_movements": inventory_movements_queryset().count(),
+        },
+        "categories": [{"label": row["category__name"], "count": row["count"]} for row in category_counts],
+        "farms": [{"label": row["farm__name"], "count": row["count"]} for row in farm_counts],
+        "low_stock_items": [
+            {
+                "id": item.id,
+                "name": item.name,
+                "farm_name": item.farm.name,
+                "category_name": item.category.name,
+                "current_quantity": item.current_quantity,
+                "low_stock_threshold": item.low_stock_threshold,
+                "unit": item.unit,
+            }
+            for item in low_stock_items
+        ],
+        "recent_movements": [
+            {
+                "id": movement.id,
+                "item_name": movement.inventory_item.name,
+                "movement_type": movement.movement_type,
+                "quantity": movement.quantity,
+                "unit": movement.inventory_item.unit,
+                "movement_date": movement.movement_date,
+            }
+            for movement in recent_movements
+        ],
+    }
 
 
 @transaction.atomic

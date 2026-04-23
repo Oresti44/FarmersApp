@@ -2,7 +2,7 @@ import Navbar from './Navbar.jsx'
 
 function AppLayout({ children, currentRoute, routes }) {
   const isWorkspaceRoute =
-    currentRoute === 'work' || currentRoute === 'plants' || currentRoute === 'finance'
+    currentRoute === 'work' || currentRoute === 'plants' || currentRoute === 'finance' || currentRoute === 'inventory'
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f7f5ef_0%,#f2f6ef_48%,#ecf0e7_100%)] text-stone-900">

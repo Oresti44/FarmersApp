@@ -1,6 +1,11 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from api.modules.inventory.controllers import (
+    InventoryCategoriesViewSet,
+    InventoryItemsViewSet,
+    InventoryMovementsViewSet,
+)
 from api.modules.plants.controllers import (
     GreenhousesViewSet,
     HarvestHistoryViewSet,
@@ -20,6 +25,9 @@ router.register("plots", PlotsViewSet, basename="plots")
 router.register("greenhouses", GreenhousesViewSet, basename="greenhouses")
 router.register("harvest-history", HarvestHistoryViewSet, basename="harvest-history")
 router.register("resource-usage", ResourceUsageViewSet, basename="resource-usage")
+router.register("inventory-categories", InventoryCategoriesViewSet, basename="inventory-categories")
+router.register("inventory-items", InventoryItemsViewSet, basename="inventory-items")
+router.register("inventory-movements", InventoryMovementsViewSet, basename="inventory-movements")
 
 
 urlpatterns = [
