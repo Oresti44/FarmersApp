@@ -177,7 +177,7 @@ function PlantForm({ greenhouses, onClose, onSubmit, open, plant, plots, stages 
                 }
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   draft.area_type === type
-                    ? 'bg-stone-950 text-white'
+                    ? 'bg-stone-950 text-stone-100'
                     : 'bg-white text-stone-700 ring-1 ring-stone-200'
                 }`}
               >
@@ -228,7 +228,7 @@ function PlantForm({ greenhouses, onClose, onSubmit, open, plant, plots, stages 
           <button
             type="submit"
             disabled={plotBlocked}
-            className="rounded-full bg-stone-950 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className="rounded-full bg-stone-950 px-5 py-2 text-sm font-semibold text-stone-100 disabled:opacity-50"
           >
             {plant?.id ? 'Save plant' : 'Create plant'}
           </button>

@@ -50,7 +50,7 @@ function TaskCommentsPanel({ comments, onAddComment }) {
           placeholder="Add a timeline comment"
           className="w-full rounded-[18px] border border-stone-200 bg-white px-4 py-3 text-sm"
         />
-        <button type="submit" className="rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white">
+          <button type="submit" className="rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-stone-100">
           Add comment
         </button>
       </form>

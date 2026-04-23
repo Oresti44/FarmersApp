@@ -227,7 +227,7 @@ function TaskForm({ actingUserId, open, onClose, onSubmit, plants, task, workers
                     })
                   }
                   className={`rounded-[18px] px-4 py-3 text-left transition ${
-                    active ? 'bg-stone-900 text-white' : 'bg-white text-stone-700 ring-1 ring-stone-200'
+                    active ? 'bg-stone-900 text-stone-100' : 'bg-white text-stone-700 ring-1 ring-stone-200'
                   }`}
                 >
                   <span className="block font-semibold">{worker.full_name}</span>
@@ -368,7 +368,7 @@ function TaskForm({ actingUserId, open, onClose, onSubmit, plants, task, workers
           <button type="button" onClick={onClose} className="rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold">
             Cancel
           </button>
-          <button type="submit" className="rounded-full bg-stone-950 px-5 py-2 text-sm font-semibold text-white">
+          <button type="submit" className="rounded-full bg-stone-950 px-5 py-2 text-sm font-semibold text-stone-100">
             {task?.id ? 'Save changes' : 'Create task'}
           </button>
         </div>

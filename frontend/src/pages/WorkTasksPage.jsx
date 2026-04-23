@@ -212,7 +212,7 @@ function WorkTasksPage() {
             <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-600">Manager mode exposes scheduling, assignment, recurring logic, reporting, and conflict visibility. Worker mode narrows the surface to assigned tasks, status updates, notes, proof, and time tracking.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               {['manager', 'worker'].map((option) => (
-                <button key={option} type="button" onClick={() => setRole(option)} className={`rounded-full px-5 py-3 text-sm font-semibold transition ${role === option ? 'bg-stone-950 text-white' : 'bg-white/80 text-stone-700 ring-1 ring-stone-200 hover:bg-white'}`}>
+                <button key={option} type="button" onClick={() => setRole(option)} className={`rounded-full px-5 py-3 text-sm font-semibold transition ${role === option ? 'bg-stone-950 text-stone-100' : 'bg-white/80 text-stone-700 ring-1 ring-stone-200 hover:bg-white'}`}>
                   {option === 'manager' ? 'Manager Mode' : 'Worker Mode'}
                 </button>
               ))}
@@ -222,7 +222,7 @@ function WorkTasksPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-stone-500">Worker profile</p>
             <div className="mt-5 grid gap-3">
               {workers.map((worker) => (
-                <button key={worker.id} type="button" onClick={() => setCurrentWorkerId(worker.id)} className={`flex items-center justify-between rounded-[20px] px-4 py-3 text-left transition ${currentWorkerId === worker.id ? 'bg-stone-900 text-white' : 'bg-stone-50 text-stone-700 ring-1 ring-stone-200 hover:bg-stone-100'}`}>
+                <button key={worker.id} type="button" onClick={() => setCurrentWorkerId(worker.id)} className={`flex items-center justify-between rounded-[20px] px-4 py-3 text-left transition ${currentWorkerId === worker.id ? 'bg-stone-900 text-stone-100' : 'bg-stone-50 text-stone-700 ring-1 ring-stone-200 hover:bg-stone-100'}`}>
                   <span>
                     <span className="block font-semibold">{worker.name}</span>
                     <span className="block text-sm opacity-75">{worker.role}</span>
@@ -250,7 +250,7 @@ function WorkTasksPage() {
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex flex-wrap gap-2">
                 {['calendar', 'list', 'details', 'reports', 'series', 'form'].map((name) => (
-                  <button key={name} type="button" onClick={() => setView(name)} className={`rounded-full px-4 py-2 text-sm font-medium transition ${view === name ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-900'}`}>
+                  <button key={name} type="button" onClick={() => setView(name)} className={`rounded-full px-4 py-2 text-sm font-medium transition ${view === name ? 'bg-stone-900 text-stone-100' : 'bg-stone-100 text-stone-600 hover:bg-stone-200 hover:text-stone-900'}`}>
                     {name === 'form' ? 'Create / Edit' : name[0].toUpperCase() + name.slice(1)}
                   </button>
                 ))}
@@ -274,7 +274,7 @@ function WorkTasksPage() {
                 </div>
                 <div className="flex gap-2 text-sm text-stone-500">
                   <span className="rounded-full bg-stone-100 px-3 py-1">Month</span>
-                  <span className="rounded-full bg-stone-900 px-3 py-1 text-white">Week</span>
+                  <span className="rounded-full bg-stone-900 px-3 py-1 text-stone-100">Week</span>
                   <span className="rounded-full bg-stone-100 px-3 py-1">Day</span>
                 </div>
               </div>
@@ -347,7 +347,7 @@ function WorkTasksPage() {
                 <div className="flex flex-wrap gap-2">
                   {role === 'manager' ? (
                     <>
-                      <button type="button" onClick={() => moveSelected(1)} className="rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white">Move +1 day</button>
+                      <button type="button" onClick={() => moveSelected(1)} className="rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-stone-100">Move +1 day</button>
                       <button type="button" onClick={() => updateStatus('Postponed')} className="rounded-full bg-violet-100 px-4 py-2 text-sm font-medium text-violet-700">Postpone</button>
                       <button type="button" onClick={() => updateStatus('Cancelled')} className="rounded-full bg-rose-100 px-4 py-2 text-sm font-medium text-rose-700">Cancel</button>
                     </>
@@ -498,12 +498,12 @@ function WorkTasksPage() {
                     <div className="mt-3 grid gap-2">
                       {workers.map((worker) => {
                         const active = draft.workers.includes(worker.id)
-                        return <button key={worker.id} type="button" onClick={() => setDraft((current) => ({ ...current, workers: active ? current.workers.filter((id) => id !== worker.id) : [...current.workers, worker.id] }))} className={`flex items-center justify-between rounded-[18px] px-4 py-3 text-left ${active ? 'bg-stone-900 text-white' : 'bg-white text-stone-700 ring-1 ring-stone-200'}`}><span>{worker.name}</span><span className="text-xs uppercase tracking-[0.18em]">{worker.role}</span></button>
+                        return <button key={worker.id} type="button" onClick={() => setDraft((current) => ({ ...current, workers: active ? current.workers.filter((id) => id !== worker.id) : [...current.workers, worker.id] }))} className={`flex items-center justify-between rounded-[18px] px-4 py-3 text-left ${active ? 'bg-stone-900 text-stone-100' : 'bg-white text-stone-700 ring-1 ring-stone-200'}`}><span>{worker.name}</span><span className="text-xs uppercase tracking-[0.18em]">{worker.role}</span></button>
                       })}
                     </div>
                   </div>
                   <label className="flex items-center gap-3 rounded-[20px] bg-stone-50 px-4 py-3 ring-1 ring-stone-200"><input type="checkbox" checked={draft.recurring} onChange={(event) => setDraft((current) => ({ ...current, recurring: event.target.checked }))} /><span className="text-sm text-stone-700">Recurring task / series template</span></label>
-                  <button type="button" onClick={saveDraft} className="w-full rounded-[20px] bg-stone-900 px-4 py-3 text-sm font-semibold text-white">Save task draft</button>
+                  <button type="button" onClick={saveDraft} className="w-full rounded-[20px] bg-stone-900 px-4 py-3 text-sm font-semibold text-stone-100">Save task draft</button>
                 </div>
               </div>
               <div className="rounded-[32px] border border-white/80 bg-white/84 p-6 shadow-[0_24px_80px_rgba(82,97,69,0.1)]">

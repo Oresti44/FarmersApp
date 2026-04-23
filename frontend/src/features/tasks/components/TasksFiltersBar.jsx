@@ -44,7 +44,7 @@ function TasksFiltersBar({
               onClick={() => onRoleChange(role)}
               className={`rounded-md px-3 py-2 text-sm font-semibold capitalize transition ${
                 actingRole === role
-                  ? 'bg-stone-950 text-white hover:bg-stone-900'
+                    ? 'bg-stone-950 text-stone-100 hover:bg-stone-900 hover:text-stone-200'
                   : 'bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50'
               }`}
             >
@@ -54,7 +54,7 @@ function TasksFiltersBar({
           <button
             type="button"
             onClick={onNewTask}
-            className="rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-900"
+            className="rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-stone-100 transition hover:bg-stone-900 hover:text-stone-200"
           >
             New Task
           </button>
