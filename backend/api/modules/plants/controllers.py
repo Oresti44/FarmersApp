@@ -170,6 +170,8 @@ class HarvestHistoryViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         entry = database.save_serializer(serializer)
+        if entry.plant.status != "harvested":
+            database.mark_plant_status(entry.plant, "harvested")
         return Response(HarvestHistorySerializer(database.get_harvest_history_entry(entry.pk)).data, status=201)
 
     def perform_update(self, serializer):

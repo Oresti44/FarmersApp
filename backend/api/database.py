@@ -1,11 +1,20 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Prefetch, Q, Sum
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
+from api.modules.finance.models import (
+    ExpenseCategory,
+    ExpenseRecord,
+    FinancePartner,
+    FinanceTransaction,
+    RecurringExpense,
+    SalesDeal,
+    SalesDelivery,
+)
 from api.modules.inventory.models import InventoryCategory, InventoryItem, InventoryMovement
 from api.modules.plants.models import Farm, Greenhouse, HarvestHistoryEntry, Plant, PlantStage, Plot
 from api.modules.tasks.models import (
@@ -43,6 +52,14 @@ def farms_queryset():
 
 def inventory_categories_queryset():
     return InventoryCategory.objects.order_by("name")
+
+
+def finance_partners_queryset():
+    return FinancePartner.objects.order_by("name")
+
+
+def expense_categories_queryset():
+    return ExpenseCategory.objects.order_by("name")
 
 
 def plant_stages_queryset():
@@ -104,8 +121,24 @@ def filter_plants(queryset, params):
         queryset = queryset.filter(plot_id=plot)
     if greenhouse := params.get("greenhouse"):
         queryset = queryset.filter(greenhouse_id=greenhouse)
+    if area_search := params.get("area_search"):
+        queryset = queryset.filter(
+            Q(plot__name__icontains=area_search)
+            | Q(plot__code__icontains=area_search)
+            | Q(greenhouse__name__icontains=area_search)
+            | Q(greenhouse__code__icontains=area_search)
+        )
     if search := params.get("search"):
-        queryset = queryset.filter(Q(name__icontains=search) | Q(variety__icontains=search))
+        queryset = queryset.filter(
+            Q(name__icontains=search)
+            | Q(variety__icontains=search)
+            | Q(notes__icontains=search)
+            | Q(stage__name__icontains=search)
+            | Q(plot__name__icontains=search)
+            | Q(plot__code__icontains=search)
+            | Q(greenhouse__name__icontains=search)
+            | Q(greenhouse__code__icontains=search)
+        )
     if expected_from := params.get("expected_from"):
         queryset = queryset.filter(expected_harvest_date__gte=expected_from)
     if expected_to := params.get("expected_to"):
@@ -408,6 +441,305 @@ def inventory_dashboard(queryset):
     }
 
 
+def recurring_expenses_queryset():
+    return (
+        RecurringExpense.objects.select_related("farm", "category", "partner", "created_by", "last_updated_by")
+        .order_by("next_due_date", "title")
+    )
+
+
+def filter_recurring_expenses(queryset, params):
+    if farm := params.get("farm"):
+        queryset = queryset.filter(farm_id=farm)
+    if category := params.get("category"):
+        queryset = queryset.filter(category_id=category)
+    if partner := params.get("partner"):
+        queryset = queryset.filter(partner_id=partner)
+    if status_value := params.get("status"):
+        queryset = queryset.filter(status=status_value)
+    if frequency := params.get("frequency"):
+        queryset = queryset.filter(frequency=frequency)
+    if due_from := params.get("due_from"):
+        queryset = queryset.filter(next_due_date__gte=due_from)
+    if due_to := params.get("due_to"):
+        queryset = queryset.filter(next_due_date__lte=due_to)
+    if search := params.get("search"):
+        queryset = queryset.filter(
+            Q(title__icontains=search)
+            | Q(description__icontains=search)
+            | Q(category__name__icontains=search)
+            | Q(partner__name__icontains=search)
+            | Q(farm__name__icontains=search)
+        )
+    return queryset.distinct()
+
+
+def get_recurring_expense(pk):
+    return recurring_expenses_queryset().get(pk=pk)
+
+
+def expense_records_queryset():
+    return (
+        ExpenseRecord.objects.select_related(
+            "farm",
+            "category",
+            "partner",
+            "recurring_expense",
+            "task",
+            "plant",
+            "worker",
+            "recorded_by",
+        )
+        .order_by("-expense_date", "-id")
+    )
+
+
+def filter_expense_records(queryset, params):
+    if farm := params.get("farm"):
+        queryset = queryset.filter(farm_id=farm)
+    if category := params.get("category"):
+        queryset = queryset.filter(category_id=category)
+    if partner := params.get("partner"):
+        queryset = queryset.filter(partner_id=partner)
+    if expense_kind := params.get("expense_kind"):
+        queryset = queryset.filter(expense_kind=expense_kind)
+    if payment_status := params.get("payment_status"):
+        queryset = queryset.filter(payment_status=payment_status)
+    if plant := params.get("plant"):
+        queryset = queryset.filter(plant_id=plant)
+    if task := params.get("task"):
+        queryset = queryset.filter(task_id=task)
+    if worker := params.get("worker"):
+        queryset = queryset.filter(worker_id=worker)
+    if date_from := params.get("date_from"):
+        queryset = queryset.filter(expense_date__gte=date_from)
+    if date_to := params.get("date_to"):
+        queryset = queryset.filter(expense_date__lte=date_to)
+    if search := params.get("search"):
+        queryset = queryset.filter(
+            Q(title__icontains=search)
+            | Q(description__icontains=search)
+            | Q(category__name__icontains=search)
+            | Q(partner__name__icontains=search)
+            | Q(task__title__icontains=search)
+            | Q(plant__name__icontains=search)
+            | Q(farm__name__icontains=search)
+        )
+    return queryset.distinct()
+
+
+def get_expense_record(pk):
+    return expense_records_queryset().get(pk=pk)
+
+
+def sales_deals_queryset():
+    return (
+        SalesDeal.objects.select_related("farm", "buyer", "plant", "created_by", "last_updated_by")
+        .prefetch_related("deliveries")
+        .order_by("-start_date", "title")
+    )
+
+
+def filter_sales_deals(queryset, params):
+    if farm := params.get("farm"):
+        queryset = queryset.filter(farm_id=farm)
+    if buyer := params.get("buyer"):
+        queryset = queryset.filter(buyer_id=buyer)
+    if plant := params.get("plant"):
+        queryset = queryset.filter(plant_id=plant)
+    if status_value := params.get("status"):
+        queryset = queryset.filter(status=status_value)
+    if frequency := params.get("frequency"):
+        queryset = queryset.filter(frequency=frequency)
+    if search := params.get("search"):
+        queryset = queryset.filter(
+            Q(title__icontains=search)
+            | Q(description__icontains=search)
+            | Q(product_name__icontains=search)
+            | Q(buyer__name__icontains=search)
+            | Q(plant__name__icontains=search)
+            | Q(farm__name__icontains=search)
+        )
+    return queryset.distinct()
+
+
+def get_sales_deal(pk):
+    return sales_deals_queryset().get(pk=pk)
+
+
+def sales_deliveries_queryset():
+    return (
+        SalesDelivery.objects.select_related(
+            "deal__farm",
+            "deal__buyer",
+            "deal__plant",
+            "harvest_history",
+            "recorded_by",
+        )
+        .order_by("-scheduled_date", "-id")
+    )
+
+
+def filter_sales_deliveries(queryset, params):
+    if farm := params.get("farm"):
+        queryset = queryset.filter(deal__farm_id=farm)
+    if deal := params.get("deal"):
+        queryset = queryset.filter(deal_id=deal)
+    if buyer := params.get("buyer"):
+        queryset = queryset.filter(deal__buyer_id=buyer)
+    if payment_status := params.get("payment_status"):
+        queryset = queryset.filter(payment_status=payment_status)
+    if scheduled_from := params.get("scheduled_from"):
+        queryset = queryset.filter(scheduled_date__gte=scheduled_from)
+    if scheduled_to := params.get("scheduled_to"):
+        queryset = queryset.filter(scheduled_date__lte=scheduled_to)
+    if search := params.get("search"):
+        queryset = queryset.filter(
+            Q(deal__title__icontains=search)
+            | Q(deal__product_name__icontains=search)
+            | Q(deal__buyer__name__icontains=search)
+            | Q(notes__icontains=search)
+        )
+    return queryset.distinct()
+
+
+def get_sales_delivery(pk):
+    return sales_deliveries_queryset().get(pk=pk)
+
+
+def finance_transactions_queryset():
+    return (
+        FinanceTransaction.objects.select_related(
+            "farm",
+            "expense_record__category",
+            "expense_record__partner",
+            "sales_delivery__deal__buyer",
+            "created_by",
+        )
+        .order_by("-transaction_date", "-id")
+    )
+
+
+def filter_finance_transactions(queryset, params):
+    if farm := params.get("farm"):
+        queryset = queryset.filter(farm_id=farm)
+    if transaction_type := params.get("transaction_type"):
+        queryset = queryset.filter(transaction_type=transaction_type)
+    if source_type := params.get("source_type"):
+        queryset = queryset.filter(source_type=source_type)
+    if payment_method := params.get("payment_method"):
+        queryset = queryset.filter(payment_method=payment_method)
+    if date_from := params.get("date_from"):
+        queryset = queryset.filter(transaction_date__gte=date_from)
+    if date_to := params.get("date_to"):
+        queryset = queryset.filter(transaction_date__lte=date_to)
+    if search := params.get("search"):
+        queryset = queryset.filter(
+            Q(note__icontains=search)
+            | Q(farm__name__icontains=search)
+            | Q(expense_record__title__icontains=search)
+            | Q(expense_record__category__name__icontains=search)
+            | Q(expense_record__partner__name__icontains=search)
+            | Q(sales_delivery__deal__title__icontains=search)
+            | Q(sales_delivery__deal__product_name__icontains=search)
+            | Q(sales_delivery__deal__buyer__name__icontains=search)
+        )
+    return queryset.distinct()
+
+
+def get_finance_transaction(pk):
+    return finance_transactions_queryset().get(pk=pk)
+
+
+def _sum_amount(queryset, field="amount"):
+    return queryset.aggregate(total=Sum(field))["total"] or 0
+
+
+def finance_dashboard(params):
+    today = timezone.localdate()
+    month_start = today.replace(day=1)
+    upcoming_cutoff = today + timedelta(days=14)
+    farm = params.get("farm")
+
+    transactions = filter_finance_transactions(finance_transactions_queryset(), params)
+    deliveries = sales_deliveries_queryset()
+    recurring = recurring_expenses_queryset()
+    expenses = expense_records_queryset()
+
+    if farm:
+        deliveries = deliveries.filter(deal__farm_id=farm)
+        recurring = recurring.filter(farm_id=farm)
+        expenses = expenses.filter(farm_id=farm)
+
+    income_total = _sum_amount(transactions.filter(transaction_type="income"))
+    expense_total = _sum_amount(transactions.filter(transaction_type="expense"))
+    outstanding_deliveries = deliveries.filter(payment_status__in=["pending", "overdue"])
+    upcoming_recurring = recurring.filter(
+        status="active",
+        next_due_date__gte=today,
+        next_due_date__lte=upcoming_cutoff,
+    )
+    month_expenses = expenses.filter(expense_date__gte=month_start, expense_date__lte=today)
+
+    category_rows = (
+        expenses.values("category__name", "category__category_type")
+        .annotate(amount=Sum("amount"), count=Count("id"))
+        .order_by("-amount", "category__name")
+    )
+    category_total = sum(row["amount"] or 0 for row in category_rows) or 0
+
+    return {
+        "summary": {
+            "income_total": income_total,
+            "expense_total": expense_total,
+            "net_balance": income_total - expense_total,
+            "outstanding_receivables": _sum_amount(outstanding_deliveries, "total_amount"),
+            "upcoming_recurring_costs": _sum_amount(upcoming_recurring),
+            "expense_records_this_month": month_expenses.count(),
+        },
+        "category_breakdown": [
+            {
+                "name": row["category__name"],
+                "category_type": row["category__category_type"],
+                "amount": row["amount"] or 0,
+                "count": row["count"],
+                "share": round(float(((row["amount"] or 0) / category_total) * 100), 1) if category_total else 0,
+            }
+            for row in category_rows
+        ],
+        "upcoming_recurring_expenses": [
+            {
+                "id": expense.id,
+                "title": expense.title,
+                "category_name": expense.category.name,
+                "category_type": expense.category.category_type,
+                "partner_name": expense.partner.name if expense.partner else "",
+                "frequency": expense.frequency,
+                "amount": expense.amount,
+                "next_due_date": expense.next_due_date,
+                "status": expense.status,
+            }
+            for expense in upcoming_recurring[:8]
+        ],
+        "delivery_queue": [
+            {
+                "id": delivery.id,
+                "title": delivery.deal.title,
+                "buyer_name": delivery.deal.buyer.name,
+                "product_name": delivery.deal.product_name,
+                "scheduled_date": delivery.scheduled_date,
+                "quantity_delivered": delivery.quantity_delivered,
+                "quantity_unit": delivery.quantity_unit,
+                "unit_price": delivery.unit_price,
+                "total_amount": delivery.total_amount,
+                "payment_status": delivery.payment_status,
+                "due_date": delivery.due_date,
+            }
+            for delivery in deliveries[:8]
+        ],
+    }
+
+
 @transaction.atomic
 def save_serializer(serializer):
     return serializer.save()
@@ -599,8 +931,16 @@ def filter_tasks(queryset, params):
         queryset = queryset.filter(
             Q(title__icontains=search)
             | Q(description__icontains=search)
+            | Q(manager_note__icontains=search)
+            | Q(worker_note__icontains=search)
             | Q(plant__name__icontains=search)
             | Q(plant__variety__icontains=search)
+            | Q(plant__plot__name__icontains=search)
+            | Q(plant__plot__code__icontains=search)
+            | Q(plant__greenhouse__name__icontains=search)
+            | Q(plant__greenhouse__code__icontains=search)
+            | Q(assignments__worker__full_name__icontains=search)
+            | Q(assignments__worker__email__icontains=search)
         )
     if farm := params.get("farm"):
         queryset = queryset.filter(Q(plant__plot__farm_id=farm) | Q(plant__greenhouse__farm_id=farm))
@@ -960,6 +1300,17 @@ def task_activity(queryset, params):
     if actor_id := params.get("actor"):
         comments = comments.filter(author_id=actor_id)
         history = history.filter(actor_id=actor_id)
+    if author_search := params.get("author_search"):
+        comments = comments.filter(
+            Q(author__full_name__icontains=author_search)
+            | Q(author__username__icontains=author_search)
+            | Q(author__email__icontains=author_search)
+        )
+        history = history.filter(
+            Q(actor__full_name__icontains=author_search)
+            | Q(actor__username__icontains=author_search)
+            | Q(actor__email__icontains=author_search)
+        )
     if comment_type := params.get("comment_type"):
         comments = comments.filter(comment_type=comment_type)
     if date_from := params.get("date_from"):

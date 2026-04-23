@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 
 import DrawerShell from '../../../components/common/DrawerShell.jsx'
-import SearchSelect from '../../../components/common/SearchSelect.jsx'
 
-function defaultDraft(greenhouse) {
+function defaultDraft(greenhouse, farmId) {
   return {
-    farm: greenhouse?.farm?.id || null,
+    farm: greenhouse?.farm?.id || farmId || null,
     name: greenhouse?.name || '',
     code: greenhouse?.code || '',
     size_value: greenhouse?.size_value || '',
@@ -19,14 +18,12 @@ function defaultDraft(greenhouse) {
   }
 }
 
-function GreenhouseForm({ farms, greenhouse, onClose, onSubmit, open }) {
-  const [draft, setDraft] = useState(defaultDraft(greenhouse))
+function GreenhouseForm({ farmId, greenhouse, onClose, onSubmit, open }) {
+  const [draft, setDraft] = useState(defaultDraft(greenhouse, farmId))
 
   useEffect(() => {
-    setDraft(defaultDraft(greenhouse))
-  }, [greenhouse])
-
-  const farmOptions = farms.map((farm) => ({ id: farm.id, label: farm.name, subtitle: farm.location_text }))
+    setDraft(defaultDraft(greenhouse, farmId))
+  }, [farmId, greenhouse])
 
   async function submit(event) {
     event.preventDefault()
@@ -36,7 +33,6 @@ function GreenhouseForm({ farms, greenhouse, onClose, onSubmit, open }) {
   return (
     <DrawerShell open={open} onClose={onClose} title={greenhouse?.id ? 'Edit greenhouse' : 'Add greenhouse'}>
       <form onSubmit={submit} className="grid gap-5">
-        <SearchSelect label="Farm" value={draft.farm} options={farmOptions} onChange={(value) => setDraft({ ...draft, farm: value })} placeholder="Choose farm" />
         <div className="grid gap-5 md:grid-cols-2">
           <input value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="Name" className="rounded-[20px] border border-stone-200 bg-white px-4 py-3 text-sm" />
           <input value={draft.code} onChange={(event) => setDraft({ ...draft, code: event.target.value })} placeholder="Code" className="rounded-[20px] border border-stone-200 bg-white px-4 py-3 text-sm" />
@@ -53,8 +49,12 @@ function GreenhouseForm({ farms, greenhouse, onClose, onSubmit, open }) {
         </div>
         <textarea value={draft.notes} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} rows={3} placeholder="Notes" className="rounded-[20px] border border-stone-200 bg-white px-4 py-3 text-sm" />
         <div className="flex justify-end gap-3">
-          <button type="button" onClick={onClose} className="rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold">Cancel</button>
-      <button type="submit" className="rounded-full bg-stone-950 px-5 py-2 text-sm font-semibold text-stone-100">{greenhouse?.id ? 'Save greenhouse' : 'Create greenhouse'}</button>
+          <button type="button" onClick={onClose} className="rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold">
+            Cancel
+          </button>
+          <button type="submit" className="rounded-full bg-stone-950 px-5 py-2 text-sm font-semibold text-stone-100">
+            {greenhouse?.id ? 'Save greenhouse' : 'Create greenhouse'}
+          </button>
         </div>
       </form>
     </DrawerShell>

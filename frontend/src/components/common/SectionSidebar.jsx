@@ -4,16 +4,15 @@ function formatLabel(value) {
 
 function SectionSidebar({ activeTab, collapsed, onChange, onToggle, tabs, title }) {
   return (
-    <aside className="min-h-[calc(100vh-4.75rem)] border-r border-stone-200/80 bg-white/82 p-3 backdrop-blur lg:sticky lg:top-[4.75rem]">
+    <aside className="border-r border-[#8ACBD0]/45 bg-white/82 p-3 backdrop-blur lg:sticky lg:top-[4.75rem] lg:h-[calc(100vh-4.75rem)] lg:self-start lg:overflow-y-auto">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className={collapsed ? 'lg:hidden' : ''}>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">{title}</p>
-          <p className="mt-1 text-sm text-stone-500">Sections</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#170C79]/65">{title}</p>
         </div>
         <button
           type="button"
           onClick={onToggle}
-          className="rounded-md border border-stone-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-stone-700 transition hover:bg-stone-50"
+          className="rounded-md border border-[#8ACBD0]/70 bg-white px-2.5 py-1.5 text-xs font-semibold text-[#170C79] transition hover:bg-[#8ACBD0]/20"
         >
           {collapsed ? 'Show' : 'Hide'}
         </button>
@@ -32,8 +31,8 @@ function SectionSidebar({ activeTab, collapsed, onChange, onToggle, tabs, title 
               onClick={() => onChange(tab)}
               className={`flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-semibold capitalize transition ${
                 isActive
-                  ? 'bg-stone-950 text-stone-100 hover:bg-stone-900 hover:text-stone-200'
-                  : 'text-stone-600 hover:bg-stone-50 hover:text-stone-950'
+                  ? 'bg-[#8ACBD0] text-[#170C79] hover:bg-[#56B6C6]'
+                  : 'text-[#170C79]/70 hover:bg-[#EFE3CA]/70 hover:text-[#170C79]'
               }`}
             >
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-current/20 text-xs uppercase">

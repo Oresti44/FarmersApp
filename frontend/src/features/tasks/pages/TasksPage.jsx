@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import EmptyState from '../../../components/common/EmptyState.jsx'
 import SectionSidebar from '../../../components/common/SectionSidebar.jsx'
@@ -15,9 +15,9 @@ import TasksOverview from '../components/TasksOverview.jsx'
 import useTasks from '../hooks/useTasks.js'
 import { TASK_TABS } from '../types/tasks.js'
 
-function blankFilters() {
+function blankFilters(farmId = null) {
   return {
-    farm: null,
+    farm: farmId,
     search: '',
     plant: null,
     worker: '',
@@ -53,18 +53,16 @@ function uniquePlants(tasks) {
   return [...byId.values()]
 }
 
-function SectionHeading({ description, eyebrow, title }) {
+function SectionHeading({ title }) {
   return (
-    <div className="border-b border-stone-200 pb-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">{eyebrow}</p>
-      <h2 className="mt-1 text-2xl font-semibold tracking-tight text-stone-950">{title}</h2>
-      {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">{description}</p> : null}
+    <div className="border-b border-[#8ACBD0]/45 pb-4">
+      <h2 className="text-2xl font-semibold tracking-tight text-[#170C79]">{title}</h2>
     </div>
   )
 }
 
-function TasksPage() {
-  const [filters, setFilters] = useState(blankFilters)
+function TasksPage({ session }) {
+  const [filters, setFilters] = useState(() => blankFilters(session?.farm?.id || null))
   const [activeTab, setActiveTab] = useState('overview')
   const [sectionNavCollapsed, setSectionNavCollapsed] = useState(false)
   const [calendarMode, setCalendarMode] = useState('week')
@@ -72,17 +70,11 @@ function TasksPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [taskToEdit, setTaskToEdit] = useState(null)
   const [deleteState, setDeleteState] = useState({ open: false, task: null, impact: null })
-  const [activityFilters, setActivityFilters] = useState({
-    task: '',
-    actor: '',
-    comment_type: '',
-    date_from: '',
-    date_to: '',
-  })
-  const [actingRole, setActingRole] = useState('manager')
+  const [activityFilters, setActivityFilters] = useState({ author_search: '' })
+  const actingRole = 'manager'
   const [actingUserId, setActingUserId] = useState(null)
-  const [selectedIds, setSelectedIds] = useState([])
   const [toasts, setToasts] = useState([])
+  const toastIdRef = useRef(0)
 
   const { activity, dashboard, error, loading, meta, plantsCatalog, refresh, setActivity, tasks } = useTasks(filters)
 
@@ -112,7 +104,8 @@ function TasksPage() {
   }
 
   function pushToast(title, message, tone = 'success') {
-    const id = `${Date.now()}-${Math.random()}`
+    toastIdRef.current += 1
+    const id = `task-toast-${toastIdRef.current}`
     setToasts((current) => [...current, { id, message, title, tone }])
     window.setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== id))
@@ -222,64 +215,6 @@ function TasksPage() {
     }
   }
 
-  async function handleBulkStatus() {
-    const nextStatus = window.prompt('Enter status: scheduled, in_progress, completed, postponed, cancelled')
-    if (!nextStatus) {
-      return
-    }
-
-    await Promise.all(
-      selectedIds.map((id) => tasksApi.update(id, { status: nextStatus, last_updated_by: currentActorId || null })),
-    )
-    setSelectedIds([])
-    pushToast('Bulk status updated')
-    await refresh()
-  }
-
-  async function handleBulkMove() {
-    const newStart = window.prompt('Enter new start date-time (YYYY-MM-DDTHH:MM)')
-    const newEnd = window.prompt('Enter new end date-time (YYYY-MM-DDTHH:MM)')
-    if (!newStart || !newEnd) {
-      return
-    }
-
-    await Promise.all(
-      selectedIds.map((id) =>
-        tasksApi.update(id, {
-          scheduled_start_at: formatForApi(newStart),
-          scheduled_end_at: formatForApi(newEnd),
-          last_updated_by: currentActorId || null,
-        }),
-      ),
-    )
-    setSelectedIds([])
-    pushToast('Bulk schedule updated')
-    await refresh()
-  }
-
-  async function handleBulkPriority() {
-    const nextPriority = window.prompt('Enter priority: low, medium, high, urgent')
-    if (!nextPriority) {
-      return
-    }
-
-    await Promise.all(
-      selectedIds.map((id) =>
-        tasksApi.update(id, { priority: nextPriority, last_updated_by: currentActorId || null }),
-      ),
-    )
-    setSelectedIds([])
-    pushToast('Bulk priority updated')
-    await refresh()
-  }
-
-  async function handleBulkDelete() {
-    await Promise.all(selectedIds.map((id) => tasksApi.delete(id)))
-    setSelectedIds([])
-    pushToast('Selected tasks deleted')
-    await refresh()
-  }
-
   async function handleRowAction(actionName, task) {
     if (actionName === 'view') {
       await loadTaskDetail(task.id)
@@ -342,11 +277,9 @@ function TasksPage() {
               {activeTab === 'overview' ? (
                 <>
                   <SectionHeading
-                    eyebrow="Tasks"
                     title="Overview"
-                    description="Current task load, status totals, and upcoming work summary."
                   />
-                  <TasksOverview dashboard={dashboard} onOpenItem={() => setActiveTab('list')} />
+                  <TasksOverview dashboard={dashboard} onOpenItem={(item) => loadTaskDetail(item.id)} />
                 </>
               ) : null}
               {activeTab === 'calendar' ? (
@@ -354,14 +287,12 @@ function TasksPage() {
                   <TasksFiltersBar
                     actingRole={actingRole}
                     actingUserId={currentActorId}
-                    farms={meta.farms}
                     filters={filters}
                     onChange={patchFilters}
                     onNewTask={() => {
                       setTaskToEdit(null)
                       setFormOpen(true)
                     }}
-                    onRoleChange={setActingRole}
                     onUserChange={setActingUserId}
                     plants={plantOptions}
                     users={meta.users}
@@ -391,29 +322,20 @@ function TasksPage() {
                   <TasksFiltersBar
                     actingRole={actingRole}
                     actingUserId={currentActorId}
-                    farms={meta.farms}
                     filters={filters}
                     onChange={patchFilters}
                     onNewTask={() => {
                       setTaskToEdit(null)
                       setFormOpen(true)
                     }}
-                    onRoleChange={setActingRole}
                     onUserChange={setActingUserId}
                     plants={plantOptions}
                     users={meta.users}
                     workerOptions={meta.workers}
                   />
                   <TasksList
-                    actingRole={actingRole}
                     onAction={handleRowAction}
-                    onBulkDelete={handleBulkDelete}
-                    onBulkMove={handleBulkMove}
-                    onBulkPriority={handleBulkPriority}
-                    onBulkStatus={handleBulkStatus}
                     onSelectTask={(task) => loadTaskDetail(task.id)}
-                    selectedIds={selectedIds}
-                    setSelectedIds={setSelectedIds}
                     tasks={tasks}
                   />
                 </>
@@ -421,9 +343,7 @@ function TasksPage() {
               {activeTab === 'activity' ? (
                 <>
                   <SectionHeading
-                    eyebrow="Tasks"
                     title="Activity"
-                    description="Task comments and status history with filters inside this section."
                   />
                   <TaskActivityFeed
                     activity={activity}

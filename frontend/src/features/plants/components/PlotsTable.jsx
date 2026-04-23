@@ -9,7 +9,6 @@ function PlotsTable({ onAction, plots }) {
             <tr>
               <th className="px-4 py-4">Name</th>
               <th className="px-4 py-4">Code</th>
-              <th className="px-4 py-4">Farm</th>
               <th className="px-4 py-4">Size</th>
               <th className="px-4 py-4">Soil</th>
               <th className="px-4 py-4">Irrigation</th>
@@ -22,13 +21,12 @@ function PlotsTable({ onAction, plots }) {
             {plots.map((plot) => (
               <tr key={plot.id} className="text-sm text-stone-700">
                 <td className="px-4 py-4 align-top font-semibold text-stone-950">{plot.name}</td>
-                <td className="px-4 py-4 align-top">{plot.code || '—'}</td>
-                <td className="px-4 py-4 align-top">{plot.farm?.name || '—'}</td>
+                <td className="px-4 py-4 align-top">{plot.code || '-'}</td>
                 <td className="px-4 py-4 align-top">
-                  {plot.size_value || '—'} {plot.size_unit || ''}
+                  {plot.size_value || '-'} {plot.size_unit || ''}
                 </td>
-                <td className="px-4 py-4 align-top">{plot.soil_type || '—'}</td>
-                <td className="px-4 py-4 align-top">{plot.irrigation_type || '—'}</td>
+                <td className="px-4 py-4 align-top">{plot.soil_type || '-'}</td>
+                <td className="px-4 py-4 align-top">{plot.irrigation_type || '-'}</td>
                 <td className="px-4 py-4 align-top">
                   <StatusBadge value={plot.status} />
                 </td>

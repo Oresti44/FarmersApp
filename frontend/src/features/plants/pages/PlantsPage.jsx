@@ -24,12 +24,13 @@ import usePlants from '../hooks/usePlants.js'
 import usePlots from '../hooks/usePlots.js'
 import { PLANTS_TABS } from '../types/plants.js'
 
-function blankFilters() {
+function blankFilters(farmId = null) {
   return {
     status: '',
     stage: '',
-    farm: null,
+    farm: farmId,
     area_type: '',
+    area_search: '',
     search: '',
     expected_from: '',
     expected_to: '',
@@ -57,13 +58,11 @@ function ActionButton({ children, onClick }) {
   )
 }
 
-function SectionHeading({ action, description, eyebrow, title }) {
+function SectionHeading({ action, title }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-stone-200 pb-4 md:flex-row md:items-end md:justify-between">
+    <div className="flex flex-col gap-3 border-b border-[#8ACBD0]/45 pb-4 md:flex-row md:items-end md:justify-between">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">{eyebrow}</p>
-        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-stone-950">{title}</h2>
-        {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">{description}</p> : null}
+        <h2 className="text-2xl font-semibold tracking-tight text-[#170C79]">{title}</h2>
       </div>
       {action}
     </div>
@@ -138,8 +137,8 @@ function dateInRange(value, dateFrom, dateTo) {
   return (!dateFrom || date >= dateFrom) && (!dateTo || date <= dateTo)
 }
 
-function PlantsPage() {
-  const [filters, setFilters] = useState(blankFilters)
+function PlantsPage({ session }) {
+  const [filters, setFilters] = useState(() => blankFilters(session?.farm?.id || null))
   const [harvestFilters, setHarvestFilters] = useState(blankRecordFilters)
   const [resourceFilters, setResourceFilters] = useState(blankRecordFilters)
   const [activeTab, setActiveTab] = useState('overview')
@@ -245,11 +244,12 @@ function PlantsPage() {
 
   async function savePlot(payload) {
     try {
+      const normalized = { ...payload, farm: payload.farm || session?.farm?.id || null }
       if (plotFormState.plot?.id) {
-        await plantsApi.updatePlot(plotFormState.plot.id, payload)
+        await plantsApi.updatePlot(plotFormState.plot.id, normalized)
         pushToast('Plot updated')
       } else {
-        await plantsApi.createPlot(payload)
+        await plantsApi.createPlot(normalized)
         pushToast('Plot created')
       }
       setPlotFormState({ open: false, plot: null })
@@ -261,11 +261,12 @@ function PlantsPage() {
 
   async function saveGreenhouse(payload) {
     try {
+      const normalized = { ...payload, farm: payload.farm || session?.farm?.id || null }
       if (greenhouseFormState.greenhouse?.id) {
-        await plantsApi.updateGreenhouse(greenhouseFormState.greenhouse.id, payload)
+        await plantsApi.updateGreenhouse(greenhouseFormState.greenhouse.id, normalized)
         pushToast('Greenhouse updated')
       } else {
-        await plantsApi.createGreenhouse(payload)
+        await plantsApi.createGreenhouse(normalized)
         pushToast('Greenhouse created')
       }
       setGreenhouseFormState({ open: false, greenhouse: null })
@@ -454,7 +455,7 @@ function PlantsPage() {
     return (
       matchesFarm(plot, filters.farm) &&
       containsSearch(
-        [plot.name, plot.code, plot.farm?.name, plot.soil_type, plot.irrigation_type, plot.current_plant?.name],
+        [plot.name, plot.code, plot.soil_type, plot.irrigation_type, plot.current_plant?.name, plot.notes],
         filters.search,
       )
     )
@@ -470,9 +471,9 @@ function PlantsPage() {
         [
           greenhouse.name,
           greenhouse.code,
-          greenhouse.farm?.name,
           greenhouse.greenhouse_type,
-          greenhouse.current_plant?.name,
+          greenhouse.notes,
+          ...(greenhouse.related_plants || []).map((plant) => `${plant.name} ${plant.variety || ''}`),
         ],
         filters.search,
       )
@@ -481,7 +482,7 @@ function PlantsPage() {
   const visibleHarvestEntries = harvestEntries.filter(
     (entry) =>
       containsSearch(
-        [entry.plant, entry.quality_grade, entry.notes, entry.recorded_by?.full_name],
+        [entry.plant_name, entry.plant_summary?.name, entry.quality_grade, entry.notes, entry.recorded_by?.full_name],
         harvestFilters.search,
       ) && dateInRange(entry.harvested_at, harvestFilters.date_from, harvestFilters.date_to),
   )
@@ -490,6 +491,8 @@ function PlantsPage() {
       containsSearch(
         [
           entry.plant,
+          entry.plant_name,
+          entry.plant_summary?.name,
           entry.linked_task?.title,
           entry.resource_name,
           entry.resource_type,
@@ -527,9 +530,7 @@ function PlantsPage() {
               {activeTab === 'overview' ? (
                 <>
                   <SectionHeading
-                    eyebrow="Plants"
                     title="Overview"
-                    description="Current plant counts, area use, and harvest/resource activity summaries."
                   />
                   <PlantsOverview dashboard={dashboard} />
                 </>
@@ -538,7 +539,6 @@ function PlantsPage() {
                 <>
                   <PlantsFiltersBar
                     action={<ActionButton onClick={() => setPlantFormState({ open: true, plant: null })}>Add Plant</ActionButton>}
-                    farms={meta.farms}
                     filters={filters}
                     onChange={patchFilters}
                     stages={meta.plant_stages}
@@ -550,7 +550,6 @@ function PlantsPage() {
                 <>
                   <PlantsFiltersBar
                     action={<ActionButton onClick={() => setPlotFormState({ open: true, plot: null })}>Add Plot</ActionButton>}
-                    farms={meta.farms}
                     filters={filters}
                     mode="areas"
                     onChange={patchFilters}
@@ -566,7 +565,6 @@ function PlantsPage() {
                         Add Greenhouse
                       </ActionButton>
                     }
-                    farms={meta.farms}
                     filters={filters}
                     mode="areas"
                     onChange={patchFilters}
@@ -627,9 +625,9 @@ function PlantsPage() {
         plots={visiblePlots}
         stages={meta.plant_stages}
       />
-      <PlotForm farms={meta.farms} onClose={() => setPlotFormState({ open: false, plot: null })} onSubmit={savePlot} open={plotFormState.open} plot={plotFormState.plot} />
+      <PlotForm farmId={session?.farm?.id || null} onClose={() => setPlotFormState({ open: false, plot: null })} onSubmit={savePlot} open={plotFormState.open} plot={plotFormState.plot} />
       <GreenhouseForm
-        farms={meta.farms}
+        farmId={session?.farm?.id || null}
         greenhouse={greenhouseFormState.greenhouse}
         onClose={() => setGreenhouseFormState({ open: false, greenhouse: null })}
         onSubmit={saveGreenhouse}

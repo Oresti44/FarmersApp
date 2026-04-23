@@ -89,21 +89,47 @@ class GreenhouseSummarySerializer(serializers.ModelSerializer):
 
 class HarvestHistorySerializer(serializers.ModelSerializer):
     recorded_by = UserSlimSerializer(read_only=True)
+    plant_name = serializers.CharField(source="plant.name", read_only=True)
+    plant_summary = serializers.SerializerMethodField()
 
     class Meta:
         model = HarvestHistoryEntry
-        fields = "__all__"
+        fields = [
+            "id",
+            "plant",
+            "plant_name",
+            "plant_summary",
+            "harvested_at",
+            "quantity",
+            "quantity_unit",
+            "quality_grade",
+            "notes",
+            "recorded_by",
+            "created_at",
+        ]
+
+    def get_plant_summary(self, obj):
+        return {
+            "id": obj.plant.id,
+            "name": obj.plant.name,
+            "variety": obj.plant.variety,
+            "status": obj.plant.status,
+        }
 
 
 class ResourceUsageSerializer(serializers.ModelSerializer):
     recorded_by = UserSlimSerializer(read_only=True)
     linked_task = serializers.SerializerMethodField()
+    plant_name = serializers.CharField(source="plant.name", read_only=True)
+    plant_summary = serializers.SerializerMethodField()
 
     class Meta:
         model = ResourceUsageEntry
         fields = [
             "id",
             "plant",
+            "plant_name",
+            "plant_summary",
             "task",
             "linked_task",
             "resource_name",
@@ -120,6 +146,14 @@ class ResourceUsageSerializer(serializers.ModelSerializer):
         if not obj.task:
             return None
         return {"id": obj.task.id, "title": obj.task.title, "status": obj.task.status}
+
+    def get_plant_summary(self, obj):
+        return {
+            "id": obj.plant.id,
+            "name": obj.plant.name,
+            "variety": obj.plant.variety,
+            "status": obj.plant.status,
+        }
 
 
 class PlantTaskSummarySerializer(serializers.ModelSerializer):

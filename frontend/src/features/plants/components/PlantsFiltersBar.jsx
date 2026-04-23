@@ -1,11 +1,4 @@
-import SearchSelect from '../../../components/common/SearchSelect.jsx'
-
-function PlantsFiltersBar({ action, farms = [], filters, mode = 'plants', onChange, stages = [] }) {
-  const farmOptions = farms.map((farm) => ({
-    id: farm.id,
-    label: farm.name,
-    subtitle: farm.location_text || 'Farm',
-  }))
+function PlantsFiltersBar({ action, filters, mode = 'plants', onChange, stages = [] }) {
   const isPlantMode = mode === 'plants'
   const title = isPlantMode ? 'Plant filters' : 'Area filters'
 
@@ -20,21 +13,15 @@ function PlantsFiltersBar({ action, farms = [], filters, mode = 'plants', onChan
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <SearchSelect
-          label="Farm"
-          value={filters.farm}
-          options={farmOptions}
-          onChange={(value) => onChange({ farm: value })}
-          placeholder="All farms"
-        />
         <label className="block">
           <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
             Search
           </span>
           <input
+            type="search"
             value={filters.search}
             onChange={(event) => onChange({ search: event.target.value })}
-            placeholder={isPlantMode ? 'Plant, variety, or area' : 'Area, code, or crop'}
+            placeholder={isPlantMode ? 'Search plant, variety, stage, or notes' : 'Search name, code, crop, or notes'}
             className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none transition focus:border-stone-400"
           />
         </label>
@@ -78,15 +65,13 @@ function PlantsFiltersBar({ action, farms = [], filters, mode = 'plants', onChan
               <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
                 Area
               </span>
-              <select
-                value={filters.area_type}
-                onChange={(event) => onChange({ area_type: event.target.value })}
+              <input
+                type="search"
+                value={filters.area_search}
+                onChange={(event) => onChange({ area_search: event.target.value })}
+                placeholder="Plot or greenhouse name"
                 className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none"
-              >
-                <option value="">All areas</option>
-                <option value="plot">Plots</option>
-                <option value="greenhouse">Greenhouses</option>
-              </select>
+              />
             </label>
             <label className="block">
               <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
@@ -113,14 +98,16 @@ function PlantsFiltersBar({ action, farms = [], filters, mode = 'plants', onChan
           </>
         ) : null}
 
-        <label className="flex min-h-[3.25rem] items-center gap-3 rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-700">
-          <input
-            type="checkbox"
-            checked={filters.show_archived}
-            onChange={(event) => onChange({ show_archived: event.target.checked })}
-          />
-          Show inactive and archived areas
-        </label>
+        {!isPlantMode ? (
+          <label className="flex min-h-[3.25rem] items-center gap-3 rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-700">
+            <input
+              type="checkbox"
+              checked={filters.show_archived}
+              onChange={(event) => onChange({ show_archived: event.target.checked })}
+            />
+            Show inactive and archived areas
+          </label>
+        ) : null}
       </div>
     </section>
   )

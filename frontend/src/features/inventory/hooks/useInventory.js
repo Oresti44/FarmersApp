@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import inventoryApi from '../api/inventoryApi.js'
 import plantsApi from '../../plants/api/plantsApi.js'
@@ -19,7 +19,7 @@ function useInventory(filters, movementFilters) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  async function refresh() {
+  const refresh = useCallback(async function refreshInventory() {
     setLoading(true)
     setError('')
 
@@ -46,24 +46,11 @@ function useInventory(filters, movementFilters) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters, movementFilters])
 
   useEffect(() => {
     refresh().catch(() => {})
-  }, [
-    filters.category,
-    filters.farm,
-    filters.low_stock,
-    filters.search,
-    filters.show_archived,
-    filters.status,
-    movementFilters.date_from,
-    movementFilters.date_to,
-    movementFilters.farm,
-    movementFilters.item,
-    movementFilters.movement_type,
-    movementFilters.search,
-  ])
+  }, [refresh])
 
   return {
     dashboard,

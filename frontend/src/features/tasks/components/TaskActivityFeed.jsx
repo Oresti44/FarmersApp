@@ -3,44 +3,13 @@ import EmptyState from '../../../components/common/EmptyState.jsx'
 function TaskActivityFeed({ activity, filters, onChange }) {
   return (
     <section className="rounded-[32px] border border-white/80 bg-white/86 p-6 shadow-[0_24px_80px_rgba(82,97,69,0.1)]">
-      <div className="grid gap-4 md:grid-cols-4">
+      <div>
         <input
-          value={filters.task}
-          onChange={(event) => onChange({ task: event.target.value })}
-          placeholder="Filter by task id"
-          className="rounded-[20px] border border-stone-200 bg-stone-50 px-4 py-3 text-sm"
+          value={filters.author_search}
+          onChange={(event) => onChange({ author_search: event.target.value })}
+          placeholder="Search by writer name"
+          className="w-full rounded-md border border-stone-200 bg-white px-4 py-3 text-sm text-stone-800 outline-none transition focus:border-stone-400"
         />
-        <input
-          value={filters.actor}
-          onChange={(event) => onChange({ actor: event.target.value })}
-          placeholder="Filter by actor id"
-          className="rounded-[20px] border border-stone-200 bg-stone-50 px-4 py-3 text-sm"
-        />
-        <select
-          value={filters.comment_type}
-          onChange={(event) => onChange({ comment_type: event.target.value })}
-          className="rounded-[20px] border border-stone-200 bg-stone-50 px-4 py-3 text-sm"
-        >
-          <option value="">All types</option>
-          <option value="note">Note</option>
-          <option value="issue">Issue</option>
-          <option value="delay">Delay</option>
-          <option value="completion">Completion</option>
-        </select>
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            type="date"
-            value={filters.date_from}
-            onChange={(event) => onChange({ date_from: event.target.value })}
-            className="rounded-[20px] border border-stone-200 bg-stone-50 px-4 py-3 text-sm"
-          />
-          <input
-            type="date"
-            value={filters.date_to}
-            onChange={(event) => onChange({ date_to: event.target.value })}
-            className="rounded-[20px] border border-stone-200 bg-stone-50 px-4 py-3 text-sm"
-          />
-        </div>
       </div>
       <div className="mt-6 space-y-3">
         {activity.length ? (

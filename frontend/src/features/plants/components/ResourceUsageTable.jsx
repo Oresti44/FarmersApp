@@ -18,15 +18,15 @@ function ResourceUsageTable({ entries, onAction }) {
           <tbody>
             {entries.map((entry) => (
               <tr key={entry.id} className="text-sm text-stone-700">
-                <td className="px-4 py-4 align-top">{entry.plant}</td>
-                <td className="px-4 py-4 align-top">{entry.linked_task?.title || '—'}</td>
+                <td className="px-4 py-4 align-top">{entry.plant_name || entry.plant_summary?.name || entry.plant}</td>
+                <td className="px-4 py-4 align-top">{entry.linked_task?.title || '-'}</td>
                 <td className="px-4 py-4 align-top">{entry.resource_name}</td>
                 <td className="px-4 py-4 align-top">{entry.resource_type}</td>
                 <td className="px-4 py-4 align-top">
                   {entry.quantity} {entry.quantity_unit}
                 </td>
                 <td className="px-4 py-4 align-top">{new Date(entry.used_at).toLocaleString()}</td>
-                <td className="px-4 py-4 align-top">{entry.recorded_by?.full_name || '—'}</td>
+                <td className="px-4 py-4 align-top">{entry.recorded_by?.full_name || '-'}</td>
                 <td className="px-4 py-4 align-top">
                   <button type="button" onClick={() => onAction('edit', entry)} className="mr-2 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-semibold">
                     Edit

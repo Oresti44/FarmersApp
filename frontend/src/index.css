@@ -2,8 +2,8 @@
 
 :root {
   font-family: "Avenir Next", "Trebuchet MS", "Segoe UI", sans-serif;
-  color: #1c1917;
-  background: #f7faf2;
+  color: #170C79;
+  background: #EFE3CA;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -24,9 +24,9 @@ body,
 body {
   min-width: 320px;
   background:
-    radial-gradient(circle at top left, rgba(155, 188, 141, 0.14), transparent 28%),
-    radial-gradient(circle at top right, rgba(244, 166, 91, 0.12), transparent 22%),
-    #f7faf2;
+    radial-gradient(circle at top left, rgba(86, 182, 198, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(138, 203, 208, 0.22), transparent 22%),
+    #EFE3CA;
 }
 
 a {

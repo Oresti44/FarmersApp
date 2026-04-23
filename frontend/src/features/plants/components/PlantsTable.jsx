@@ -24,7 +24,7 @@ function PlantsTable({ onAction, onOpen, plants }) {
                 <td className="px-4 py-4 align-top">
                   <button type="button" onClick={() => onOpen(plant)} className="text-left">
                     <span className="block font-semibold text-stone-950">{plant.name}</span>
-                    <span className="text-stone-500">{plant.farm?.name || 'No farm'}</span>
+                    <span className="text-stone-500">{plant.area_summary?.name || 'No area'}</span>
                   </button>
                 </td>
                 <td className="px-4 py-4 align-top">{plant.variety || '—'}</td>

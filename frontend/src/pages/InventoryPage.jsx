@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx'
 import DrawerShell from '../components/common/DrawerShell.jsx'
@@ -10,9 +10,9 @@ import inventoryApi from '../features/inventory/api/inventoryApi.js'
 import useInventory from '../features/inventory/hooks/useInventory.js'
 import { INVENTORY_TABS } from '../features/inventory/types/inventory.js'
 
-function blankItemFilters() {
+function blankItemFilters(farmId = '') {
   return {
-    farm: '',
+    farm: farmId,
     category: '',
     status: '',
     search: '',
@@ -21,10 +21,9 @@ function blankItemFilters() {
   }
 }
 
-function blankMovementFilters() {
+function blankMovementFilters(farmId = '') {
   return {
-    farm: '',
-    item: '',
+    farm: farmId,
     movement_type: '',
     search: '',
     date_from: '',
@@ -45,13 +44,11 @@ function ActionButton({ children, onClick, tone = 'dark' }) {
   )
 }
 
-function SectionHeading({ action, description, eyebrow, title }) {
+function SectionHeading({ action, title }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-stone-200 pb-4 md:flex-row md:items-end md:justify-between">
+    <div className="flex flex-col gap-3 border-b border-[#8ACBD0]/45 pb-4 md:flex-row md:items-end md:justify-between">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">{eyebrow}</p>
-        <h2 className="mt-1 text-2xl font-semibold tracking-tight text-stone-950">{title}</h2>
-        {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600">{description}</p> : null}
+        <h2 className="text-2xl font-semibold tracking-tight text-[#170C79]">{title}</h2>
       </div>
       {action}
     </div>
@@ -90,13 +87,12 @@ function toneLabel(value) {
   return String(value || '').replaceAll('_', ' ')
 }
 
-function OverviewCard({ label, value, note }) {
+function OverviewCard({ label, value }) {
   return (
-    <article className="rounded-[24px] border border-stone-200/80 bg-white/88 p-5 shadow-sm backdrop-blur">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">{label}</p>
-      <p className="mt-3 text-3xl font-semibold tracking-tight text-stone-950">{value}</p>
-      {note ? <p className="mt-2 text-sm text-stone-600">{note}</p> : null}
-    </article>
+    <div className="border-b border-[#8ACBD0]/45 pb-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#170C79]/55">{label}</p>
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-[#170C79]">{value}</p>
+    </div>
   )
 }
 
@@ -115,9 +111,9 @@ function FiltersCard({ action, children, title }) {
   )
 }
 
-function ItemFormDrawer({ categories, farms, item, onClose, onSubmit, open }) {
+function ItemFormDrawer({ categories, farmId, item, onClose, onSubmit, open }) {
   const [draft, setDraft] = useState(() => ({
-    farm_id: item?.farm?.id || '',
+    farm_id: item?.farm?.id || farmId || '',
     category_id: item?.category?.id || '',
     name: item?.name || '',
     unit: item?.unit || '',
@@ -134,7 +130,7 @@ function ItemFormDrawer({ categories, farms, item, onClose, onSubmit, open }) {
 
   return (
     <DrawerShell
-      description="Capture the stock item, its farm, category, units, and threshold."
+      description="Capture the stock item, category, units, and threshold."
       onClose={onClose}
       open={open}
       title={item?.id ? 'Edit Inventory Item' : 'Add Inventory Item'}
@@ -148,16 +144,6 @@ function ItemFormDrawer({ categories, farms, item, onClose, onSubmit, open }) {
       }
     >
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Farm">
-          <select className={inputClassName()} value={draft.farm_id} onChange={(event) => setDraft((current) => ({ ...current, farm_id: event.target.value }))}>
-            <option value="">Select farm</option>
-            {farms.map((farm) => (
-              <option key={farm.id} value={farm.id}>
-                {farm.name}
-              </option>
-            ))}
-          </select>
-        </Field>
         <Field label="Category">
           <select className={inputClassName()} value={draft.category_id} onChange={(event) => setDraft((current) => ({ ...current, category_id: event.target.value }))}>
             <option value="">Select category</option>
@@ -374,11 +360,11 @@ function InventoryItemDrawer({ item, onClose, onEdit, onNewMovement, open }) {
   )
 }
 
-function InventoryPage() {
+function InventoryPage({ session }) {
   const [activeTab, setActiveTab] = useState('overview')
   const [sectionNavCollapsed, setSectionNavCollapsed] = useState(false)
-  const [itemFilters, setItemFilters] = useState(blankItemFilters)
-  const [movementFilters, setMovementFilters] = useState(blankMovementFilters)
+  const [itemFilters, setItemFilters] = useState(() => blankItemFilters(session?.farm?.id || ''))
+  const [movementFilters, setMovementFilters] = useState(() => blankMovementFilters(session?.farm?.id || ''))
   const [itemFormState, setItemFormState] = useState({ open: false, item: null })
   const [movementFormState, setMovementFormState] = useState({ open: false, movement: null, itemId: null })
   const [categoryDraft, setCategoryDraft] = useState({ id: null, name: '', description: '' })
@@ -386,6 +372,7 @@ function InventoryPage() {
   const [deleteState, setDeleteState] = useState({ open: false, item: null, impact: null })
   const [movementDeleteState, setMovementDeleteState] = useState({ open: false, movement: null })
   const [toasts, setToasts] = useState([])
+  const toastIdRef = useRef(0)
 
   const { dashboard, error, items, loading, meta, movements, refresh } = useInventory(itemFilters, movementFilters)
 
@@ -406,7 +393,8 @@ function InventoryPage() {
   }
 
   function pushToast(title, message, tone = 'success') {
-    const id = `${Date.now()}-${Math.random()}`
+    toastIdRef.current += 1
+    const id = `inventory-toast-${toastIdRef.current}`
     setToasts((current) => [...current, { id, title, message, tone }])
     window.setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== id))
@@ -442,7 +430,10 @@ function InventoryPage() {
     try {
       const normalized = {
         ...payload,
-        movement_date: payload.movement_date ? new Date(payload.movement_date).toISOString() : null,
+        created_by_id: payload.created_by_id || null,
+        movement_date: payload.movement_date ? new Date(payload.movement_date).toISOString() : undefined,
+        plant: payload.plant || null,
+        task: payload.task || null,
       }
 
       if (movementFormState.movement?.id) {
@@ -559,13 +550,11 @@ function InventoryPage() {
             {activeTab === 'overview' ? (
               <>
                 <SectionHeading
-                  eyebrow="Inventory"
                   title="Overview"
-                  description="Watch low-stock pressure, recent movement activity, and category spread across farms."
                 />
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                   <OverviewCard label="Active items" value={dashboard?.summary?.active_items || 0} />
-                  <OverviewCard label="Low stock" value={dashboard?.summary?.low_stock_items || 0} note="Items at or under their threshold." />
+                  <OverviewCard label="Low stock" value={dashboard?.summary?.low_stock_items || 0} />
                   <OverviewCard label="Archived items" value={dashboard?.summary?.archived_items || 0} />
                   <OverviewCard label="Total movements" value={dashboard?.summary?.total_movements || 0} />
                 </div>
@@ -637,17 +626,7 @@ function InventoryPage() {
                   title="Inventory filters"
                 >
                   <Field label="Search">
-                    <input className={inputClassName()} placeholder="Item, farm, location, note" value={itemFilters.search} onChange={(event) => patchItemFilters({ search: event.target.value })} />
-                  </Field>
-                  <Field label="Farm">
-                    <select className={inputClassName()} value={itemFilters.farm} onChange={(event) => patchItemFilters({ farm: event.target.value })}>
-                      <option value="">All farms</option>
-                      {meta.farms.map((farm) => (
-                        <option key={farm.id} value={farm.id}>
-                          {farm.name}
-                        </option>
-                      ))}
-                    </select>
+                    <input className={inputClassName()} type="search" placeholder="Search item, category, location, or note" value={itemFilters.search} onChange={(event) => patchItemFilters({ search: event.target.value })} />
                   </Field>
                   <Field label="Category">
                     <select className={inputClassName()} value={itemFilters.category} onChange={(event) => patchItemFilters({ category: event.target.value })}>
@@ -754,27 +733,7 @@ function InventoryPage() {
                   title="Movement filters"
                 >
                   <Field label="Search">
-                    <input className={inputClassName()} placeholder="Item, category, plant, task, note" value={movementFilters.search} onChange={(event) => patchMovementFilters({ search: event.target.value })} />
-                  </Field>
-                  <Field label="Farm">
-                    <select className={inputClassName()} value={movementFilters.farm} onChange={(event) => patchMovementFilters({ farm: event.target.value })}>
-                      <option value="">All farms</option>
-                      {meta.farms.map((farm) => (
-                        <option key={farm.id} value={farm.id}>
-                          {farm.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Item">
-                    <select className={inputClassName()} value={movementFilters.item} onChange={(event) => patchMovementFilters({ item: event.target.value })}>
-                      <option value="">All items</option>
-                      {itemOptions.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name}
-                        </option>
-                      ))}
-                    </select>
+                    <input className={inputClassName()} type="search" placeholder="Search item, category, plant, task, or note" value={movementFilters.search} onChange={(event) => patchMovementFilters({ search: event.target.value })} />
                   </Field>
                   <Field label="Type">
                     <select className={inputClassName()} value={movementFilters.movement_type} onChange={(event) => patchMovementFilters({ movement_type: event.target.value })}>
@@ -849,9 +808,7 @@ function InventoryPage() {
               <>
                 <SectionHeading
                   action={<ActionButton onClick={() => setCategoryDraft({ id: null, name: '', description: '' })} tone="soft">New category</ActionButton>}
-                  eyebrow="Inventory"
                   title="Categories"
-                  description="Keep item grouping tidy so the inventory list and movement history stay easy to scan."
                 />
                 <div className="grid gap-5 xl:grid-cols-[1fr_1.1fr]">
                   <section className="rounded-[28px] border border-stone-200/80 bg-white/88 p-5 shadow-sm">
@@ -912,7 +869,7 @@ function InventoryPage() {
       />
       <ItemFormDrawer
         categories={categoryOptions}
-        farms={meta.farms}
+        farmId={session?.farm?.id || ''}
         item={itemFormState.item}
         key={itemFormState.item?.id || 'new-item'}
         onClose={() => setItemFormState({ open: false, item: null })}

@@ -1,13 +1,10 @@
 import SearchSelect from '../../../components/common/SearchSelect.jsx'
 
 function TasksFiltersBar({
-  actingRole,
   actingUserId,
-  farms = [],
   filters,
   onChange,
   onNewTask,
-  onRoleChange,
   onUserChange,
   plants = [],
   users = [],
@@ -17,11 +14,6 @@ function TasksFiltersBar({
     id: user.id,
     label: user.full_name,
     subtitle: `${user.role} - ${user.email || user.username}`,
-  }))
-  const farmOptions = farms.map((farm) => ({
-    id: farm.id,
-    label: farm.name,
-    subtitle: farm.location_text || 'Farm',
   }))
   const plantOptions = plants.map((plant) => ({
     id: plant.id,
@@ -37,20 +29,6 @@ function TasksFiltersBar({
           <h2 className="mt-1 text-xl font-semibold tracking-tight text-stone-950">Task filters</h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {['manager', 'worker'].map((role) => (
-            <button
-              key={role}
-              type="button"
-              onClick={() => onRoleChange(role)}
-              className={`rounded-md px-3 py-2 text-sm font-semibold capitalize transition ${
-                actingRole === role
-                    ? 'bg-stone-950 text-stone-100 hover:bg-stone-900 hover:text-stone-200'
-                  : 'bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-stone-50'
-              }`}
-            >
-              {role}
-            </button>
-          ))}
           <button
             type="button"
             onClick={onNewTask}
@@ -62,19 +40,23 @@ function TasksFiltersBar({
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <label className="block md:col-span-2">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+            Search
+          </span>
+          <input
+            value={filters.search}
+            onChange={(event) => onChange({ search: event.target.value })}
+            placeholder="Search title, description, plant, or variety"
+            className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none transition focus:border-stone-400"
+          />
+        </label>
         <SearchSelect
-          label="Actor"
+          label="Acting user"
           value={actingUserId}
           options={userOptions}
           onChange={onUserChange}
           placeholder="Choose acting user"
-        />
-        <SearchSelect
-          label="Farm"
-          value={filters.farm}
-          options={farmOptions}
-          onChange={(value) => onChange({ farm: value })}
-          placeholder="All farms"
         />
         <SearchSelect
           label="Plant"
@@ -83,17 +65,6 @@ function TasksFiltersBar({
           onChange={(value) => onChange({ plant: value })}
           placeholder="All plants"
         />
-        <label className="block">
-          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
-            Search
-          </span>
-          <input
-            value={filters.search}
-            onChange={(event) => onChange({ search: event.target.value })}
-            placeholder="Title, plant, or note"
-            className="w-full rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-800 outline-none transition focus:border-stone-400"
-          />
-        </label>
         <label className="block">
           <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
             Date from

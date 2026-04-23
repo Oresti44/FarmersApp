@@ -9,7 +9,6 @@ function GreenhousesTable({ onAction, greenhouses }) {
             <tr>
               <th className="px-4 py-4">Name</th>
               <th className="px-4 py-4">Code</th>
-              <th className="px-4 py-4">Farm</th>
               <th className="px-4 py-4">Size</th>
               <th className="px-4 py-4">Type</th>
               <th className="px-4 py-4">Temp range</th>
@@ -23,16 +22,15 @@ function GreenhousesTable({ onAction, greenhouses }) {
             {greenhouses.map((greenhouse) => (
               <tr key={greenhouse.id} className="text-sm text-stone-700">
                 <td className="px-4 py-4 align-top font-semibold text-stone-950">{greenhouse.name}</td>
-                <td className="px-4 py-4 align-top">{greenhouse.code || '—'}</td>
-                <td className="px-4 py-4 align-top">{greenhouse.farm?.name || '—'}</td>
+                <td className="px-4 py-4 align-top">{greenhouse.code || '-'}</td>
                 <td className="px-4 py-4 align-top">
-                  {greenhouse.size_value || '—'} {greenhouse.size_unit || ''}
+                  {greenhouse.size_value || '-'} {greenhouse.size_unit || ''}
                 </td>
-                <td className="px-4 py-4 align-top">{greenhouse.greenhouse_type || '—'}</td>
+                <td className="px-4 py-4 align-top">{greenhouse.greenhouse_type || '-'}</td>
                 <td className="px-4 py-4 align-top">
-                  {greenhouse.temperature_min_c || '—'} / {greenhouse.temperature_max_c || '—'}
+                  {greenhouse.temperature_min_c || '-'} / {greenhouse.temperature_max_c || '-'}
                 </td>
-                <td className="px-4 py-4 align-top">{greenhouse.humidity_target_percent || '—'}</td>
+                <td className="px-4 py-4 align-top">{greenhouse.humidity_target_percent || '-'}</td>
                 <td className="px-4 py-4 align-top">
                   <StatusBadge value={greenhouse.status} />
                 </td>

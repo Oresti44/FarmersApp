@@ -15,7 +15,6 @@ function DrawerShell({ open, title, description, onClose, children, footer }) {
         <div className="sticky top-0 z-10 border-b border-stone-200 bg-[#fbfaf6]/95 px-5 py-4 backdrop-blur sm:px-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">Side Drawer</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight text-stone-950">{title}</h2>
               {description ? <p className="mt-2 text-sm leading-6 text-stone-600">{description}</p> : null}
             </div>

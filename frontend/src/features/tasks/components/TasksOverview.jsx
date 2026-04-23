@@ -2,30 +2,30 @@ import EmptyState from '../../../components/common/EmptyState.jsx'
 
 function Card({ label, value }) {
   return (
-    <article className="rounded-[24px] border border-white/80 bg-white/86 p-5 shadow-[0_20px_55px_rgba(82,97,69,0.08)]">
-      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-stone-500">{label}</p>
-      <p className="mt-3 text-4xl font-semibold tracking-tight text-stone-950">{value}</p>
-    </article>
+    <div className="border-b border-[#8ACBD0]/45 pb-4">
+      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#170C79]/55">{label}</p>
+      <p className="mt-2 text-4xl font-semibold tracking-tight text-[#170C79]">{value}</p>
+    </div>
   )
 }
 
 function Section({ title, items, onOpen }) {
   return (
-    <article className="rounded-[28px] border border-white/80 bg-white/86 p-5 shadow-[0_18px_50px_rgba(82,97,69,0.08)]">
-      <h3 className="text-xl font-semibold tracking-tight text-stone-950">{title}</h3>
-      <div className="mt-4 space-y-3">
+    <article className="rounded-lg border border-white/80 bg-white/86 p-5 shadow-[0_18px_50px_rgba(23,12,121,0.08)]">
+      <h3 className="text-xl font-semibold tracking-tight text-[#170C79]">{title}</h3>
+      <div className="mt-4 divide-y divide-[#8ACBD0]/35">
         {items?.length ? (
           items.map((item) => (
             <button
               key={`${title}-${item.id}-${item.title || item.label || item.plant__name || item.assignments__worker__username}`}
               type="button"
               onClick={() => onOpen(item)}
-              className="flex w-full items-center justify-between rounded-[20px] bg-stone-50 px-4 py-3 text-left transition hover:bg-stone-100"
+              className="flex w-full items-center justify-between py-3 text-left transition hover:bg-[#8ACBD0]/10"
             >
-              <span className="text-sm text-stone-700">
+              <span className="text-sm text-[#170C79]/75">
                 {item.title || item.label || item.plant__name || item.assignments__worker__username || 'Item'}
               </span>
-              <span className="text-sm font-semibold text-stone-950">
+              <span className="text-sm font-semibold text-[#170C79]">
                 {item.count ?? item.status ?? item.scheduled_start_at ?? item.updated_at ?? ''}
               </span>
             </button>
@@ -49,13 +49,11 @@ function TasksOverview({ dashboard, onOpenItem }) {
     ['In progress', dashboard.summary.in_progress],
     ['Waiting confirmation', dashboard.summary.waiting_confirmation],
     ['Completed this week', dashboard.summary.completed_this_week],
-    ['Postponed', dashboard.summary.postponed],
-    ['Cancelled', dashboard.summary.cancelled],
   ]
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-7">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {cards.map(([label, value]) => (
           <Card key={label} label={label} value={value} />
         ))}
