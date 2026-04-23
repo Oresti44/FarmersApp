@@ -49,7 +49,7 @@ function TasksHeader({
                 onClick={() => onRoleChange(role)}
                 className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   actingRole === role
-                    ? 'bg-stone-950 text-white'
+                    ? 'bg-stone-950 text-stone-100'
                     : 'bg-white/85 text-stone-700 ring-1 ring-stone-200 hover:bg-white'
                 }`}
               >
@@ -121,7 +121,7 @@ function TasksHeader({
             <button
               type="button"
               onClick={onNewTask}
-              className="self-end rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
+            className="self-end rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-stone-100 transition hover:bg-stone-800 hover:text-stone-200"
             >
               New Task
             </button>

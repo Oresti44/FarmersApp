@@ -16,7 +16,7 @@ function ConfirmDialog({
   const confirmClass =
     confirmTone === 'danger'
       ? 'bg-rose-600 text-white hover:bg-rose-700'
-      : 'bg-stone-900 text-white hover:bg-stone-800'
+                  : 'bg-stone-900 text-stone-100 hover:bg-stone-800 hover:text-stone-200'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/45 px-4 backdrop-blur-sm">

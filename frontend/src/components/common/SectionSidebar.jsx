@@ -32,7 +32,7 @@ function SectionSidebar({ activeTab, collapsed, onChange, onToggle, tabs, title 
               onClick={() => onChange(tab)}
               className={`flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-semibold capitalize transition ${
                 isActive
-                  ? 'bg-stone-950 text-white hover:bg-stone-900'
+                  ? 'bg-stone-950 text-stone-100 hover:bg-stone-900 hover:text-stone-200'
                   : 'text-stone-600 hover:bg-stone-50 hover:text-stone-950'
               }`}
             >

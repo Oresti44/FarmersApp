@@ -24,8 +24,8 @@ function Navbar({ currentRoute, routes }) {
                 href={`#${key}`}
                 className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
                   isActive
-                    ? 'bg-stone-950 text-white hover:bg-stone-900'
-                    : 'text-stone-600 hover:bg-stone-100 hover:text-stone-950'
+                    ? 'bg-stone-950 text-stone-100 hover:bg-stone-900 hover:text-stone-200'
+                    : 'text-stone-600 hover:bg-stone-100 hover:text-stone-950' 
                 }`}
               >
                 {route.label}

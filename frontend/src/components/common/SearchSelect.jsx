@@ -72,7 +72,7 @@ function SearchSelect({
                     setQuery('')
                   }}
                   className={`mt-1 flex w-full items-start justify-between rounded-[16px] px-3 py-2 text-left transition ${
-                    String(option.id) === String(value) ? 'bg-stone-900 text-white' : 'hover:bg-stone-50'
+                    String(option.id) === String(value) ? 'bg-stone-900 text-stone-100' : 'hover:bg-stone-50'
                   }`}
                 >
                   <span>

@@ -64,7 +64,7 @@ function DashboardPage() {
           <div className="mt-8 flex flex-wrap gap-3">
             <a
               href="#finance"
-              className="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-stone-800"
+              className="rounded-full bg-stone-900 px-5 py-3 text-sm font-medium text-stone-100 transition hover:bg-stone-800 hover:text-stone-200"
             >
               Explore pages
             </a>

@@ -48,7 +48,7 @@ function TasksCalendar({ mode, onCreateSlot, onModeChange, onSelectTask, tasks }
               type="button"
               onClick={() => onModeChange(item)}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                mode === item ? 'bg-stone-950 text-white' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+              mode === item ? 'bg-stone-950 text-stone-100' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
               }`}
             >
               {item}

@@ -80,7 +80,7 @@ function TaskStatusActions({ actingRole, onAction, task }) {
               <button type="button" onClick={() => setMode('')} className="rounded-full bg-stone-100 px-4 py-2">
                 Close
               </button>
-              <button type="submit" className="rounded-full bg-stone-950 px-4 py-2 font-semibold text-white">
+          <button type="submit" className="rounded-full bg-stone-950 px-4 py-2 font-semibold text-stone-100">
                 Save action
               </button>
             </div>

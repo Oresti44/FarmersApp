@@ -9,7 +9,7 @@ function PlantsTabs({ activeTab, onChange, tabs }) {
             onClick={() => onChange(tab)}
             className={`rounded-full px-4 py-2.5 text-sm font-semibold capitalize transition ${
               activeTab === tab
-                ? 'bg-stone-950 text-white'
+                ? 'bg-stone-950 text-stone-100'
                 : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
             }`}
           >

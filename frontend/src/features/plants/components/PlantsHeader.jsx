@@ -32,7 +32,7 @@ function PlantsHeader({ farms, filters, onChange, onNewPlant }) {
             <button
               type="button"
               onClick={onNewPlant}
-              className="self-end rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-stone-800"
+            className="self-end rounded-full bg-stone-950 px-5 py-3 text-sm font-semibold text-stone-100 transition hover:bg-stone-800 hover:text-stone-200"
             >
               Add Plant
             </button>

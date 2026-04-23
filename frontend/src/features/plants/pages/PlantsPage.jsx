@@ -50,7 +50,7 @@ function ActionButton({ children, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-stone-900"
+      className="rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-stone-100 transition hover:bg-stone-900 hover:text-stone-200"
     >
       {children}
     </button>
