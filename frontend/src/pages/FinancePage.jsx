@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 
 import DrawerShell from '../components/common/DrawerShell.jsx'
 import EmptyState from '../components/common/EmptyState.jsx'
@@ -19,7 +19,7 @@ function statusClasses(status) {
   if (['overdue', 'cancelled', 'ended'].includes(normalized)) {
     return 'bg-rose-50 text-rose-700 ring-rose-200'
   }
-  return 'bg-[#8ACBD0]/25 text-[#170C79] ring-[#8ACBD0]'
+  return 'bg-[#b7d387]/25 text-[#22331f] ring-[#b7d387]'
 }
 
 function formatLabel(value) {
@@ -39,13 +39,13 @@ function formatDate(value) {
 }
 
 function inputClassName() {
-  return 'w-full rounded-md border border-[#8ACBD0]/70 bg-white px-3 py-3 text-sm text-[#170C79] outline-none transition focus:border-[#56B6C6]'
+  return 'w-full rounded-md border border-[#b7d387]/70 bg-white px-3 py-3 text-sm text-[#22331f] outline-none transition focus:border-[#6d9143]'
 }
 
 function SectionHeading({ action, title }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-[#8ACBD0]/45 pb-4 md:flex-row md:items-end md:justify-between">
-      <h2 className="text-2xl font-semibold tracking-tight text-[#170C79]">{title}</h2>
+    <div className="flex flex-col gap-3 border-b border-[#b7d387]/45 pb-4 md:flex-row md:items-end md:justify-between">
+      <h2 className="text-2xl font-semibold tracking-tight text-[#22331f]">{title}</h2>
       {action}
     </div>
   )
@@ -54,8 +54,8 @@ function SectionHeading({ action, title }) {
 function ActionButton({ children, disabled = false, onClick, tone = 'primary' }) {
   const className =
     tone === 'soft'
-      ? 'rounded-md border border-[#56B6C6]/60 bg-white px-4 py-2 text-sm font-semibold text-[#170C79] transition hover:bg-[#8ACBD0]/20 disabled:cursor-not-allowed disabled:opacity-55'
-      : 'rounded-md bg-[#56B6C6] px-4 py-2 text-sm font-semibold text-[#170C79] transition hover:bg-[#8ACBD0] disabled:cursor-not-allowed disabled:opacity-55'
+      ? 'rounded-md border border-[#6d9143]/60 bg-white px-4 py-2 text-sm font-semibold text-[#22331f] transition hover:bg-[#b7d387]/20 disabled:cursor-not-allowed disabled:opacity-55'
+      : 'rounded-md bg-[#6d9143] px-4 py-2 text-sm font-semibold text-[#22331f] transition hover:bg-[#b7d387] disabled:cursor-not-allowed disabled:opacity-55'
   return (
     <button type="button" disabled={disabled} onClick={onClick} className={className}>
       {children}
@@ -73,16 +73,16 @@ function StatusPill({ value }) {
 
 function Metric({ label, value, tone }) {
   return (
-    <div className="border-b border-[#8ACBD0]/45 pb-4">
+    <div className="border-b border-[#b7d387]/45 pb-4">
       <div className="flex min-w-0 items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#170C79]/55">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#22331f]/55">{label}</p>
         {tone ? (
-          <span className="shrink-0 rounded-full bg-[#8ACBD0]/25 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[#170C79]">
+          <span className="shrink-0 rounded-full bg-[#b7d387]/25 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[#22331f]">
             {tone}
           </span>
         ) : null}
       </div>
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-[#170C79]">{value}</p>
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-[#22331f]">{value}</p>
     </div>
   )
 }
@@ -90,7 +90,7 @@ function Metric({ label, value, tone }) {
 function Field({ children, label }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-[#170C79]/55">{label}</span>
+      <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-[#22331f]/55">{label}</span>
       {children}
     </label>
   )
@@ -147,7 +147,7 @@ function TransactionFilters({ filters, onChange, onNewTransaction }) {
   return (
     <section className="rounded-lg border border-white/80 bg-white/86 p-4 shadow-sm">
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h3 className="text-lg font-semibold tracking-tight text-[#170C79]">Filters</h3>
+        <h3 className="text-lg font-semibold tracking-tight text-[#22331f]">Filters</h3>
         <ActionButton onClick={onNewTransaction}>New transaction</ActionButton>
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -190,8 +190,8 @@ function TransactionsSection({ filters, onChangeFilters, onNewTransaction, onVie
       <TransactionFilters filters={filters} onChange={onChangeFilters} onNewTransaction={onNewTransaction} />
       <section className="rounded-lg border border-white/80 bg-white/86 shadow-[0_20px_60px_rgba(23,12,121,0.08)]">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-[#8ACBD0]/35 text-sm">
-            <thead className="bg-[#EFE3CA]/70 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[#170C79]/60">
+          <table className="min-w-full divide-y divide-[#b7d387]/35 text-sm">
+            <thead className="bg-[#f4ecd9]/70 text-left text-xs font-semibold uppercase tracking-[0.14em] text-[#22331f]/60">
               <tr>
                 <th className="px-4 py-3">Reference</th>
                 <th className="px-4 py-3">Date</th>
@@ -202,17 +202,17 @@ function TransactionsSection({ filters, onChangeFilters, onNewTransaction, onVie
                 <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#8ACBD0]/25 bg-white">
+            <tbody className="divide-y divide-[#b7d387]/25 bg-white">
               {visibleTransactions.map((transaction) => (
-                <tr key={transaction.id} className="align-top text-[#170C79]/75">
+                <tr key={transaction.id} className="align-top text-[#22331f]/75">
                   <td className="px-4 py-4">
                     <button type="button" onClick={() => onView(transaction)} className="text-left">
-                      <span className="block font-semibold text-[#170C79]">{transaction.source_summary?.title || 'Finance transaction'}</span>
-                      <span className="mt-1 block text-xs uppercase tracking-[0.12em] text-[#170C79]/50">{formatLabel(transaction.payment_method || 'no method')}</span>
+                      <span className="block font-semibold text-[#22331f]">{transaction.source_summary?.title || 'Finance transaction'}</span>
+                      <span className="mt-1 block text-xs uppercase tracking-[0.12em] text-[#22331f]/50">{formatLabel(transaction.payment_method || 'no method')}</span>
                     </button>
                   </td>
                   <td className="px-4 py-4">{formatDate(transaction.transaction_date)}</td>
-                  <td className={transaction.transaction_type === 'income' ? 'px-4 py-4 font-semibold text-emerald-700' : 'px-4 py-4 font-semibold text-[#170C79]'}>
+                  <td className={transaction.transaction_type === 'income' ? 'px-4 py-4 font-semibold text-emerald-700' : 'px-4 py-4 font-semibold text-[#22331f]'}>
                     {transaction.transaction_type === 'income' ? '+' : '-'}
                     {formatMoney(transaction.amount)}
                   </td>
@@ -245,59 +245,59 @@ function ExpensesSection({ categoryBreakdown, expenseRecords, recurringExpenses 
         <div className="rounded-lg border border-white/80 bg-white/86 p-6 shadow-[0_20px_60px_rgba(23,12,121,0.08)]">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#170C79]/55">Recurring expenses</p>
-              <h3 className="mt-2 text-xl font-semibold text-[#170C79]">{formatMoney(recurringTotal)}</h3>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#22331f]/55">Recurring expenses</p>
+              <h3 className="mt-2 text-xl font-semibold text-[#22331f]">{formatMoney(recurringTotal)}</h3>
             </div>
             <StatusPill value={`${recurringExpenses.length} plans`} />
           </div>
-          <div className="mt-4 divide-y divide-[#8ACBD0]/35">
+          <div className="mt-4 divide-y divide-[#b7d387]/35">
             {recurringExpenses.slice(0, 8).map((expense) => (
               <div key={expense.id} className="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="font-semibold text-[#170C79]">{expense.title}</p>
-                  <p className="mt-1 text-sm text-[#170C79]/60">
+                  <p className="font-semibold text-[#22331f]">{expense.title}</p>
+                  <p className="mt-1 text-sm text-[#22331f]/60">
                     {expense.category?.name || 'Uncategorized'} / {formatLabel(expense.frequency)} / due {formatDate(expense.next_due_date)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 md:justify-end">
-                  <p className="font-semibold text-[#170C79]">{formatMoney(expense.amount)}</p>
+                  <p className="font-semibold text-[#22331f]">{formatMoney(expense.amount)}</p>
                   <StatusPill value={expense.status} />
                 </div>
               </div>
             ))}
-            {!recurringExpenses.length ? <p className="py-3 text-sm text-[#170C79]/65">No recurring expenses recorded.</p> : null}
+            {!recurringExpenses.length ? <p className="py-3 text-sm text-[#22331f]/65">No recurring expenses recorded.</p> : null}
           </div>
         </div>
         <div className="rounded-lg border border-white/80 bg-white/86 p-6 shadow-[0_20px_60px_rgba(23,12,121,0.08)]">
-          <h3 className="text-xl font-semibold tracking-tight text-[#170C79]">Latest expense categories</h3>
-          <div className="mt-4 divide-y divide-[#8ACBD0]/35">
+          <h3 className="text-xl font-semibold tracking-tight text-[#22331f]">Latest expense categories</h3>
+          <div className="mt-4 divide-y divide-[#b7d387]/35">
             {categoryBreakdown.map((category) => (
               <div key={category.name} className="flex items-center justify-between gap-3 py-3">
                 <div>
-                  <p className="font-semibold text-[#170C79]">{category.name}</p>
-                  <p className="mt-1 text-sm text-[#170C79]/60">{category.count} records</p>
+                  <p className="font-semibold text-[#22331f]">{category.name}</p>
+                  <p className="mt-1 text-sm text-[#22331f]/60">{category.count} records</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-[#170C79]">{formatMoney(category.amount)}</p>
-                  <p className="mt-1 text-sm text-[#170C79]/60">{Number(category.share || 0)}%</p>
+                  <p className="font-semibold text-[#22331f]">{formatMoney(category.amount)}</p>
+                  <p className="mt-1 text-sm text-[#22331f]/60">{Number(category.share || 0)}%</p>
                 </div>
               </div>
             ))}
-            {!categoryBreakdown.length ? <p className="py-3 text-sm text-[#170C79]/65">No category totals yet.</p> : null}
+            {!categoryBreakdown.length ? <p className="py-3 text-sm text-[#22331f]/65">No category totals yet.</p> : null}
           </div>
         </div>
       </section>
       <section className="rounded-lg border border-white/80 bg-white/86 p-6 shadow-[0_20px_60px_rgba(23,12,121,0.08)]">
-        <h3 className="text-xl font-semibold tracking-tight text-[#170C79]">Latest expenses</h3>
-        <div className="mt-4 divide-y divide-[#8ACBD0]/35">
+        <h3 className="text-xl font-semibold tracking-tight text-[#22331f]">Latest expenses</h3>
+        <div className="mt-4 divide-y divide-[#b7d387]/35">
           {expenseRecords.slice(0, 8).map((expense) => (
             <div key={expense.id} className="flex flex-col gap-3 py-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="font-semibold text-[#170C79]">{expense.title}</p>
-                <p className="mt-1 text-sm text-[#170C79]/60">{expense.category?.name || 'Uncategorized'} / {formatDate(expense.expense_date)}</p>
+                <p className="font-semibold text-[#22331f]">{expense.title}</p>
+                <p className="mt-1 text-sm text-[#22331f]/60">{expense.category?.name || 'Uncategorized'} / {formatDate(expense.expense_date)}</p>
               </div>
               <div className="flex items-center gap-3 md:justify-end">
-                <p className="font-semibold text-[#170C79]">{formatMoney(expense.amount)}</p>
+                <p className="font-semibold text-[#22331f]">{formatMoney(expense.amount)}</p>
                 <StatusPill value={expense.payment_status} />
               </div>
             </div>
@@ -323,8 +323,8 @@ function SalesSection({ salesDeals, salesDeliveries }) {
     <div className="space-y-6">
       <SectionHeading title="Sales" />
       <section className="rounded-lg border border-white/80 bg-white/86 p-6 shadow-[0_20px_60px_rgba(23,12,121,0.08)]">
-        <h3 className="text-xl font-semibold tracking-tight text-[#170C79]">Sales records</h3>
-        <div className="mt-4 divide-y divide-[#8ACBD0]/35">
+        <h3 className="text-xl font-semibold tracking-tight text-[#22331f]">Sales records</h3>
+        <div className="mt-4 divide-y divide-[#b7d387]/35">
           {uniqueDeals.map((deal) => {
             const deliveries = deliveriesByDeal.get(deal.id) || []
             const total = deliveries.reduce((sum, delivery) => sum + Number(delivery.total_amount || 0), 0)
@@ -332,23 +332,23 @@ function SalesSection({ salesDeals, salesDeliveries }) {
             return (
               <div key={deal.id} className="flex flex-col gap-3 py-3 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <p className="font-semibold text-[#170C79]">{deal.title}</p>
-                  <p className="mt-1 text-sm text-[#170C79]/60">
+                  <p className="font-semibold text-[#22331f]">{deal.title}</p>
+                  <p className="mt-1 text-sm text-[#22331f]/60">
                     {deal.product_name} for {deal.buyer?.name || 'No buyer'} / {deliveries.length || deal.delivery_count || 0} delivery
                     {(deliveries.length || deal.delivery_count || 0) === 1 ? '' : 'ies'}
                   </p>
                 </div>
                 <div className="flex flex-col items-start gap-2 md:items-end">
-                  <p className="font-semibold text-[#170C79]">{formatMoney(total || Number(deal.agreed_quantity || 0) * Number(deal.unit_price || 0))}</p>
+                  <p className="font-semibold text-[#22331f]">{formatMoney(total || Number(deal.agreed_quantity || 0) * Number(deal.unit_price || 0))}</p>
                   <div className="flex flex-wrap gap-2 md:justify-end">
                     <StatusPill value={latestDelivery?.payment_status || deal.status} />
-                    <span className="text-sm text-[#170C79]/60">{latestDelivery ? formatDate(latestDelivery.scheduled_date) : formatDate(deal.start_date)}</span>
+                    <span className="text-sm text-[#22331f]/60">{latestDelivery ? formatDate(latestDelivery.scheduled_date) : formatDate(deal.start_date)}</span>
                   </div>
                 </div>
               </div>
             )
           })}
-          {!uniqueDeals.length ? <p className="py-3 text-sm text-[#170C79]/65">No sales records yet.</p> : null}
+          {!uniqueDeals.length ? <p className="py-3 text-sm text-[#22331f]/65">No sales records yet.</p> : null}
         </div>
       </section>
     </div>
@@ -364,13 +364,13 @@ function PartnersSection({ onNewPartner, partners }) {
           <article key={partner.id} className="rounded-lg border border-white/80 bg-white/86 p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-semibold text-[#170C79]">{partner.name}</h3>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#170C79]/55">{formatLabel(partner.partner_type)}</p>
+                <h3 className="text-lg font-semibold text-[#22331f]">{partner.name}</h3>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#22331f]/55">{formatLabel(partner.partner_type)}</p>
               </div>
               <StatusPill value="active" />
             </div>
-            <p className="mt-4 text-sm leading-6 text-[#170C79]/70">{partner.notes || 'No notes recorded.'}</p>
-            <div className="mt-4 space-y-1 text-sm text-[#170C79]/65">
+            <p className="mt-4 text-sm leading-6 text-[#22331f]/70">{partner.notes || 'No notes recorded.'}</p>
+            <div className="mt-4 space-y-1 text-sm text-[#22331f]/65">
               <p>{partner.contact_person || 'No contact person'}</p>
               <p>{partner.email || 'No email'}</p>
               <p>{partner.phone || 'No phone'}</p>
@@ -393,11 +393,11 @@ function formatPercent(value) {
   return `${Number(value || 0).toFixed(1)}%`
 }
 
-const PIE_COLORS = ['#56B6C6', '#170C79', '#C17C74', '#6F9E75', '#D6A94A', '#8ACBD0']
+const PIE_COLORS = ['#6d9143', '#22331f', '#C17C74', '#6F9E75', '#D6A94A', '#b7d387']
 
 function buildPieGradient(rows) {
   if (!rows.length) {
-    return '#EFE3CA'
+    return '#f4ecd9'
   }
   let cursor = 0
   const stops = rows.map((row, index) => {
@@ -426,26 +426,26 @@ function groupMoney(rows, getKey, getLabel) {
 function DistributionPanel({ emptyLabel, rows, title }) {
   return (
     <section className="rounded-lg border border-white/80 bg-white/86 p-6 shadow-sm">
-      <h3 className="text-xl font-semibold tracking-tight text-[#170C79]">{title}</h3>
+      <h3 className="text-xl font-semibold tracking-tight text-[#22331f]">{title}</h3>
       <div className="mt-5 grid gap-5 lg:grid-cols-[11rem_minmax(0,1fr)]">
-        <div className="aspect-square rounded-full ring-1 ring-[#8ACBD0]/50" style={{ background: buildPieGradient(rows) }} />
-        <div className="divide-y divide-[#8ACBD0]/35">
+        <div className="aspect-square rounded-full ring-1 ring-[#b7d387]/50" style={{ background: buildPieGradient(rows) }} />
+        <div className="divide-y divide-[#b7d387]/35">
           {rows.map((row, index) => (
             <div key={row.label} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
-                <p className="truncate font-semibold text-[#170C79]">
+                <p className="truncate font-semibold text-[#22331f]">
                   <span className="mr-2 inline-block h-3 w-3 rounded-sm" style={{ background: PIE_COLORS[index % PIE_COLORS.length] }} />
                   {row.label}
                 </p>
-                <p className="mt-1 text-sm text-[#170C79]/60">{row.count} record{row.count === 1 ? '' : 's'}</p>
+                <p className="mt-1 text-sm text-[#22331f]/60">{row.count} record{row.count === 1 ? '' : 's'}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="font-semibold text-[#170C79]">{formatMoney(row.amount)}</p>
-                <p className="mt-1 text-sm text-[#170C79]/60">{formatPercent(row.share)}</p>
+                <p className="font-semibold text-[#22331f]">{formatMoney(row.amount)}</p>
+                <p className="mt-1 text-sm text-[#22331f]/60">{formatPercent(row.share)}</p>
               </div>
             </div>
           ))}
-          {!rows.length ? <p className="py-3 text-sm text-[#170C79]/65">{emptyLabel}</p> : null}
+          {!rows.length ? <p className="py-3 text-sm text-[#22331f]/65">{emptyLabel}</p> : null}
         </div>
       </div>
     </section>
@@ -468,7 +468,7 @@ function StatisticsSection({ expenseRecords, recurringExpenses, salesDeliveries 
     <div className="space-y-6">
       <SectionHeading
         action={
-          <div className="grid grid-cols-2 gap-1 rounded-lg bg-[#EFE3CA]/70 p-1">
+          <div className="grid grid-cols-2 gap-1 rounded-lg bg-[#f4ecd9]/70 p-1">
             {[
               ['week', 'Week'],
               ['month', 'Month'],
@@ -477,7 +477,7 @@ function StatisticsSection({ expenseRecords, recurringExpenses, salesDeliveries 
                 key={value}
                 type="button"
                 onClick={() => setPeriod(value)}
-                className={`rounded-md px-4 py-2 text-sm font-semibold ${period === value ? 'bg-[#8ACBD0] text-[#170C79]' : 'text-[#170C79]/70'}`}
+                className={`rounded-md px-4 py-2 text-sm font-semibold ${period === value ? 'bg-[#b7d387] text-[#22331f]' : 'text-[#22331f]/70'}`}
               >
                 {label}
               </button>
@@ -493,21 +493,21 @@ function StatisticsSection({ expenseRecords, recurringExpenses, salesDeliveries 
         <Metric label="Recurring due" value={formatMoney(recurringTotal)} />
       </section>
       <section className="rounded-lg border border-white/80 bg-white/86 p-6 shadow-sm">
-        <h3 className="text-xl font-semibold tracking-tight text-[#170C79]">Expense vs sales</h3>
+        <h3 className="text-xl font-semibold tracking-tight text-[#22331f]">Expense vs sales</h3>
         <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <div className="border-b border-[#8ACBD0]/45 pb-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#170C79]/55">Expense share</p>
-            <div className="mt-3 h-3 rounded-full bg-[#EFE3CA]">
-              <div className="h-3 rounded-full bg-[#170C79]" style={{ width: `${Math.min(100, (expenseTotal / Math.max(expenseTotal + salesTotal, 1)) * 100)}%` }} />
+          <div className="border-b border-[#b7d387]/45 pb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#22331f]/55">Expense share</p>
+            <div className="mt-3 h-3 rounded-full bg-[#f4ecd9]">
+              <div className="h-3 rounded-full bg-[#22331f]" style={{ width: `${Math.min(100, (expenseTotal / Math.max(expenseTotal + salesTotal, 1)) * 100)}%` }} />
             </div>
-            <p className="mt-2 text-sm text-[#170C79]/60">{formatPercent((expenseTotal / Math.max(expenseTotal + salesTotal, 1)) * 100)} of recorded flow</p>
+            <p className="mt-2 text-sm text-[#22331f]/60">{formatPercent((expenseTotal / Math.max(expenseTotal + salesTotal, 1)) * 100)} of recorded flow</p>
           </div>
-          <div className="border-b border-[#8ACBD0]/45 pb-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#170C79]/55">Sales share</p>
-            <div className="mt-3 h-3 rounded-full bg-[#EFE3CA]">
-              <div className="h-3 rounded-full bg-[#56B6C6]" style={{ width: `${Math.min(100, (salesTotal / Math.max(expenseTotal + salesTotal, 1)) * 100)}%` }} />
+          <div className="border-b border-[#b7d387]/45 pb-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#22331f]/55">Sales share</p>
+            <div className="mt-3 h-3 rounded-full bg-[#f4ecd9]">
+              <div className="h-3 rounded-full bg-[#6d9143]" style={{ width: `${Math.min(100, (salesTotal / Math.max(expenseTotal + salesTotal, 1)) * 100)}%` }} />
             </div>
-            <p className="mt-2 text-sm text-[#170C79]/60">{formatPercent((salesTotal / Math.max(expenseTotal + salesTotal, 1)) * 100)} of recorded flow</p>
+            <p className="mt-2 text-sm text-[#22331f]/60">{formatPercent((salesTotal / Math.max(expenseTotal + salesTotal, 1)) * 100)} of recorded flow</p>
           </div>
         </div>
       </section>
@@ -635,9 +635,9 @@ function NewTransactionDrawer({ categories, farmId, onClose, onSaved, open, part
   return (
     <DrawerShell open={open} onClose={onClose} title="New transaction">
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-2 rounded-lg bg-[#EFE3CA]/70 p-1">
+        <div className="grid grid-cols-2 gap-2 rounded-lg bg-[#f4ecd9]/70 p-1">
           {['sale', 'expense'].map((value) => (
-            <button key={value} type="button" onClick={() => setKind(value)} className={`rounded-md px-4 py-2 text-sm font-semibold capitalize ${kind === value ? 'bg-[#8ACBD0] text-[#170C79]' : 'text-[#170C79]/70'}`}>
+            <button key={value} type="button" onClick={() => setKind(value)} className={`rounded-md px-4 py-2 text-sm font-semibold capitalize ${kind === value ? 'bg-[#b7d387] text-[#22331f]' : 'text-[#22331f]/70'}`}>
               {value}
             </button>
           ))}
@@ -781,7 +781,7 @@ function TransactionDrawer({ onClose, open, transaction }) {
             <Metric label="Source" value={formatLabel(transaction.source_type)} />
             <Metric label="Partner" value={transaction.source_summary?.partner_name || 'Not set'} />
           </div>
-          <p className="rounded-lg bg-white/80 p-4 text-sm leading-6 text-[#170C79]/70">{transaction.note || 'No note recorded.'}</p>
+          <p className="rounded-lg bg-white/80 p-4 text-sm leading-6 text-[#22331f]/70">{transaction.note || 'No note recorded.'}</p>
         </div>
       ) : null}
     </DrawerShell>
@@ -867,3 +867,4 @@ function FinancePage({ session }) {
 }
 
 export default FinancePage
+

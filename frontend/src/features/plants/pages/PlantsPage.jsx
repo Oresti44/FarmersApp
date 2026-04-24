@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 
 import EmptyState from '../../../components/common/EmptyState.jsx'
 import SectionSidebar from '../../../components/common/SectionSidebar.jsx'
@@ -19,6 +19,7 @@ import PlotForm from '../components/PlotForm.jsx'
 import PlotsTable from '../components/PlotsTable.jsx'
 import ResourceUsageForm from '../components/ResourceUsageForm.jsx'
 import ResourceUsageTable from '../components/ResourceUsageTable.jsx'
+import useDebouncedValue from '../../../hooks/useDebouncedValue.js'
 import useGreenhouses from '../hooks/useGreenhouses.js'
 import usePlants from '../hooks/usePlants.js'
 import usePlots from '../hooks/usePlots.js'
@@ -60,9 +61,9 @@ function ActionButton({ children, onClick }) {
 
 function SectionHeading({ action, title }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-[#8ACBD0]/45 pb-4 md:flex-row md:items-end md:justify-between">
+    <div className="flex flex-col gap-3 border-b border-[#b7d387]/45 pb-4 md:flex-row md:items-end md:justify-between">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight text-[#170C79]">{title}</h2>
+        <h2 className="text-2xl font-semibold tracking-tight text-[#22331f]">{title}</h2>
       </div>
       {action}
     </div>
@@ -154,8 +155,9 @@ function PlantsPage({ session }) {
   const [harvestEntries, setHarvestEntries] = useState([])
   const [resourceEntries, setResourceEntries] = useState([])
   const [tasks, setTasks] = useState([])
+  const debouncedFilters = useDebouncedValue(filters, 350)
 
-  const { dashboard, error, loading, meta, plants, refresh } = usePlants(filters)
+  const { dashboard, error, loading, meta, plants, refresh } = usePlants(debouncedFilters)
   const { greenhouses, refresh: refreshGreenhouses } = useGreenhouses()
   const { plots, refresh: refreshPlots } = usePlots()
 
@@ -210,7 +212,7 @@ function PlantsPage({ session }) {
   }
 
   async function refreshAll() {
-    await Promise.all([refresh(), refreshPlots(), refreshGreenhouses()])
+    await Promise.all([refresh(filters), refreshPlots(), refreshGreenhouses()])
     const [harvestData, resourceData, taskData] = await Promise.all([
       plantsApi.listHarvest(),
       plantsApi.listResourceUsage(),
@@ -663,3 +665,4 @@ function PlantsPage({ session }) {
 }
 
 export default PlantsPage
+

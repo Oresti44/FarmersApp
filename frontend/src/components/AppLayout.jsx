@@ -1,12 +1,12 @@
-import Navbar from './Navbar.jsx'
+﻿import Navbar from './Navbar.jsx'
 
 function AppLayout({ children, currentRoute, onLogout, routes, session }) {
   const isWorkspaceRoute =
     currentRoute === 'work' || currentRoute === 'plants' || currentRoute === 'finance' || currentRoute === 'inventory'
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#EFE3CA_0%,#e9f4f4_52%,#8ACBD0_145%)] text-[#170C79]">
-      <div className="absolute inset-x-0 top-0 -z-0 h-[28rem] bg-[radial-gradient(circle_at_top_left,rgba(86,182,198,0.23),transparent_42%),radial-gradient(circle_at_top_right,rgba(138,203,208,0.28),transparent_36%)]" />
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f8f4e8_0%,#eef3dd_46%,#dce8bd_100%)] text-[#22331f]">
+      <div className="absolute inset-x-0 top-0 -z-0 h-[28rem] bg-[radial-gradient(circle_at_top_left,rgba(109,145,67,0.22),transparent_42%),radial-gradient(circle_at_top_right,rgba(183,211,135,0.28),transparent_36%)]" />
       <div className="relative z-10 min-h-screen">
         <Navbar currentRoute={currentRoute} onLogout={onLogout} routes={routes} session={session} />
         <main
@@ -24,3 +24,4 @@ function AppLayout({ children, currentRoute, onLogout, routes, session }) {
 }
 
 export default AppLayout
+

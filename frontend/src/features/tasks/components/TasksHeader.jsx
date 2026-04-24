@@ -1,4 +1,4 @@
-import SearchSelect from '../../../components/common/SearchSelect.jsx'
+﻿import SearchSelect from '../../../components/common/SearchSelect.jsx'
 
 function TasksHeader({
   actingRole,
@@ -16,7 +16,7 @@ function TasksHeader({
   const userOptions = users.map((user) => ({
     id: user.id,
     label: user.full_name,
-    subtitle: `${user.role} · ${user.email || user.username}`,
+    subtitle: `${user.role} / ${user.email || user.username}`,
   }))
   const farmOptions = farms.map((farm) => ({
     id: farm.id,
@@ -26,7 +26,7 @@ function TasksHeader({
   const plantOptions = plants.map((plant) => ({
     id: plant.id,
     label: plant.name,
-    subtitle: `${plant.variety || 'No variety'} · ${plant.area_summary?.name || 'No area'}`,
+    subtitle: `${plant.variety || 'No variety'} / ${plant.area_summary?.name || 'No area'}`,
   }))
 
   return (
@@ -133,3 +133,4 @@ function TasksHeader({
 }
 
 export default TasksHeader
+

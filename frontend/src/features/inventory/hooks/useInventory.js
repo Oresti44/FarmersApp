@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import inventoryApi from '../api/inventoryApi.js'
 import plantsApi from '../../plants/api/plantsApi.js'
@@ -17,10 +17,18 @@ function useInventory(filters, movementFilters) {
     tasks: [],
   })
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
+  const hasLoadedRef = useRef(false)
 
   const refresh = useCallback(async function refreshInventory() {
-    setLoading(true)
+    const isInitialLoad = !hasLoadedRef.current
+
+    if (isInitialLoad) {
+      setLoading(true)
+    } else {
+      setRefreshing(true)
+    }
     setError('')
 
     try {
@@ -41,10 +49,15 @@ function useInventory(filters, movementFilters) {
       setDashboard(dashboardData)
       setItems(itemsData)
       setMovements(movementData)
+      hasLoadedRef.current = true
     } catch (caughtError) {
       setError(caughtError.message || 'Unable to load inventory.')
     } finally {
-      setLoading(false)
+      if (isInitialLoad) {
+        setLoading(false)
+      } else {
+        setRefreshing(false)
+      }
     }
   }, [filters, movementFilters])
 
@@ -60,6 +73,7 @@ function useInventory(filters, movementFilters) {
     meta,
     movements,
     refresh,
+    refreshing,
   }
 }
 

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+﻿import { useMemo, useRef, useState } from 'react'
 
 import ConfirmDialog from '../components/common/ConfirmDialog.jsx'
 import DrawerShell from '../components/common/DrawerShell.jsx'
@@ -9,6 +9,7 @@ import ToastViewport from '../components/common/ToastViewport.jsx'
 import inventoryApi from '../features/inventory/api/inventoryApi.js'
 import useInventory from '../features/inventory/hooks/useInventory.js'
 import { INVENTORY_TABS } from '../features/inventory/types/inventory.js'
+import useDebouncedValue from '../hooks/useDebouncedValue.js'
 
 function blankItemFilters(farmId = '') {
   return {
@@ -46,9 +47,9 @@ function ActionButton({ children, onClick, tone = 'dark' }) {
 
 function SectionHeading({ action, title }) {
   return (
-    <div className="flex flex-col gap-3 border-b border-[#8ACBD0]/45 pb-4 md:flex-row md:items-end md:justify-between">
+    <div className="flex flex-col gap-3 border-b border-[#b7d387]/45 pb-4 md:flex-row md:items-end md:justify-between">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight text-[#170C79]">{title}</h2>
+        <h2 className="text-2xl font-semibold tracking-tight text-[#22331f]">{title}</h2>
       </div>
       {action}
     </div>
@@ -89,9 +90,9 @@ function toneLabel(value) {
 
 function OverviewCard({ label, value }) {
   return (
-    <div className="border-b border-[#8ACBD0]/45 pb-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#170C79]/55">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-[#170C79]">{value}</p>
+    <div className="border-b border-[#b7d387]/45 pb-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#22331f]/55">{label}</p>
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-[#22331f]">{value}</p>
     </div>
   )
 }
@@ -373,8 +374,13 @@ function InventoryPage({ session }) {
   const [movementDeleteState, setMovementDeleteState] = useState({ open: false, movement: null })
   const [toasts, setToasts] = useState([])
   const toastIdRef = useRef(0)
+  const debouncedItemFilters = useDebouncedValue(itemFilters, 350)
+  const debouncedMovementFilters = useDebouncedValue(movementFilters, 350)
 
-  const { dashboard, error, items, loading, meta, movements, refresh } = useInventory(itemFilters, movementFilters)
+  const { dashboard, error, items, loading, meta, movements, refresh } = useInventory(
+    debouncedItemFilters,
+    debouncedMovementFilters,
+  )
 
   const categoryOptions = meta.inventory_categories || []
   const itemOptions = items
@@ -917,3 +923,4 @@ function InventoryPage({ session }) {
 }
 
 export default InventoryPage
+

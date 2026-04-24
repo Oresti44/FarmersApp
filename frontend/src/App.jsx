@@ -10,7 +10,7 @@ import { LoginPage, SignupPage } from './features/auth/pages/AuthPages.jsx'
 
 const publicRoutes = {
   dashboard: {
-    label: 'Dashboard',
+    label: 'Home',
     component: DashboardPage,
   },
   login: {

@@ -1,4 +1,4 @@
-import DrawerShell from '../../../components/common/DrawerShell.jsx'
+﻿import DrawerShell from '../../../components/common/DrawerShell.jsx'
 import PriorityBadge from '../../../components/common/PriorityBadge.jsx'
 import StatusBadge from '../../../components/common/StatusBadge.jsx'
 import TaskAssignmentsPanel from './TaskAssignmentsPanel.jsx'
@@ -25,7 +25,7 @@ function TaskDrawer({
       open={open}
       onClose={onClose}
       title={task.title}
-      description={`${task.plant_summary?.name || 'No plant'} · ${task.area_summary?.name || 'No location'}`}
+      description={`${task.plant_summary?.name || 'No plant'} / ${task.area_summary?.name || 'No location'}`}
       footer={
         <div className="flex flex-wrap justify-end gap-3">
           <button type="button" onClick={() => onEdit(task)} className="rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold">
@@ -74,7 +74,12 @@ function TaskDrawer({
           </div>
           <p className="mt-5 text-sm leading-7 text-stone-600">{task.description || 'No description yet.'}</p>
         </section>
-        <TaskStatusActions actingRole={actingRole} onAction={onStatusAction} task={task} />
+        <TaskStatusActions
+          key={`${actingRole}-${task.id}-${task.status}`}
+          actingRole={actingRole}
+          onAction={onStatusAction}
+          task={task}
+        />
         <TaskAssignmentsPanel assignments={task.assignments || []} />
         <TaskCommentsPanel comments={task.comments || []} onAddComment={onAddComment} />
         <TaskHistoryPanel history={task.history || []} />
@@ -84,3 +89,4 @@ function TaskDrawer({
 }
 
 export default TaskDrawer
+

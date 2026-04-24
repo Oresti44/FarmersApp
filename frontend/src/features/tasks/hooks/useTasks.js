@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { request } from '../../../lib/apiClient.js'
 import tasksApi from '../api/tasksApi.js'
@@ -10,13 +10,21 @@ function useTasks(filters) {
   const [meta, setMeta] = useState({ farms: [], plant_stages: [], users: [], workers: [] })
   const [plantsCatalog, setPlantsCatalog] = useState([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
+  const hasLoadedRef = useRef(false)
 
   useEffect(() => {
     let active = true
 
     async function load() {
-      setLoading(true)
+      const isInitialLoad = !hasLoadedRef.current
+
+      if (isInitialLoad) {
+        setLoading(true)
+      } else {
+        setRefreshing(true)
+      }
       setError('')
 
       try {
@@ -37,13 +45,18 @@ function useTasks(filters) {
         setMeta(metaData)
         setActivity(activityData)
         setPlantsCatalog(plantsData)
+        hasLoadedRef.current = true
       } catch (caughtError) {
         if (active) {
           setError(caughtError.message)
         }
       } finally {
         if (active) {
-          setLoading(false)
+          if (isInitialLoad) {
+            setLoading(false)
+          } else {
+            setRefreshing(false)
+          }
         }
       }
     }
@@ -56,7 +69,14 @@ function useTasks(filters) {
   }, [filters])
 
   async function refresh(nextFilters = filters) {
-    setLoading(true)
+    const isInitialLoad = !hasLoadedRef.current
+
+    if (isInitialLoad) {
+      setLoading(true)
+    } else {
+      setRefreshing(true)
+    }
+
     try {
       const [tasksData, dashboardData, activityData, plantsData] = await Promise.all([
         tasksApi.list(nextFilters),
@@ -69,11 +89,16 @@ function useTasks(filters) {
       setActivity(activityData)
       setPlantsCatalog(plantsData)
       setError('')
+      hasLoadedRef.current = true
     } catch (caughtError) {
       setError(caughtError.message)
       throw caughtError
     } finally {
-      setLoading(false)
+      if (isInitialLoad) {
+        setLoading(false)
+      } else {
+        setRefreshing(false)
+      }
     }
   }
 
@@ -85,6 +110,7 @@ function useTasks(filters) {
     meta,
     plantsCatalog,
     refresh,
+    refreshing,
     setActivity,
     tasks,
   }

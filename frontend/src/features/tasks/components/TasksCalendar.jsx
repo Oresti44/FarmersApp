@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const TIME_SLOTS = Array.from({ length: 33 }, (_, index) => {
@@ -127,7 +127,7 @@ function CalendarTaskChip({ horizontal = false, onSelectTask, task }) {
       type="button"
       title={task.title}
       onClick={() => onSelectTask(task)}
-      className={`min-w-0 rounded-md border border-stone-200 bg-white px-2 py-1 text-left shadow-sm transition hover:border-[#56B6C6] ${
+      className={`min-w-0 rounded-md border border-stone-200 bg-white px-2 py-1 text-left shadow-sm transition hover:border-[#6d9143] ${
         horizontal ? 'max-w-[12rem] flex-1 basis-[10rem]' : 'w-full'
       }`}
     >
@@ -168,7 +168,7 @@ function MonthView({ onCreateSlot, onSelectDay, onSelectTask, tasksByDay, viewDa
               <button
                 type="button"
                 onClick={() => onSelectDay(day)}
-                className="mt-2 w-full rounded-md bg-[#8ACBD0]/20 px-2 py-2 text-left text-xs font-semibold text-[#170C79]"
+                className="mt-2 w-full rounded-md bg-[#b7d387]/20 px-2 py-2 text-left text-xs font-semibold text-[#22331f]"
               >
                 {entries.length} task{entries.length === 1 ? '' : 's'}
               </button>
@@ -334,3 +334,4 @@ function TasksCalendar({ mode, onCreateSlot, onModeChange, onSelectTask, tasks }
 }
 
 export default TasksCalendar
+

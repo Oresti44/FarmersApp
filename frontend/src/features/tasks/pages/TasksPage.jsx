@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useRef, useState } from 'react'
 
 import EmptyState from '../../../components/common/EmptyState.jsx'
 import SectionSidebar from '../../../components/common/SectionSidebar.jsx'
@@ -12,6 +12,7 @@ import DeleteTaskDialog from '../components/DeleteTaskDialog.jsx'
 import TasksFiltersBar from '../components/TasksFiltersBar.jsx'
 import TasksList from '../components/TasksList.jsx'
 import TasksOverview from '../components/TasksOverview.jsx'
+import useDebouncedValue from '../../../hooks/useDebouncedValue.js'
 import useTasks from '../hooks/useTasks.js'
 import { TASK_TABS } from '../types/tasks.js'
 
@@ -55,8 +56,8 @@ function uniquePlants(tasks) {
 
 function SectionHeading({ title }) {
   return (
-    <div className="border-b border-[#8ACBD0]/45 pb-4">
-      <h2 className="text-2xl font-semibold tracking-tight text-[#170C79]">{title}</h2>
+    <div className="border-b border-[#b7d387]/45 pb-4">
+      <h2 className="text-2xl font-semibold tracking-tight text-[#22331f]">{title}</h2>
     </div>
   )
 }
@@ -75,15 +76,19 @@ function TasksPage({ session }) {
   const [actingUserId, setActingUserId] = useState(null)
   const [toasts, setToasts] = useState([])
   const toastIdRef = useRef(0)
+  const debouncedFilters = useDebouncedValue(filters, 350)
+  const debouncedActivityFilters = useDebouncedValue(activityFilters, 250)
 
-  const { activity, dashboard, error, loading, meta, plantsCatalog, refresh, setActivity, tasks } = useTasks(filters)
+  const { activity, dashboard, error, loading, meta, plantsCatalog, refresh, setActivity, tasks } = useTasks(
+    debouncedFilters,
+  )
 
   useEffect(() => {
     let active = true
 
     async function loadActivity() {
       try {
-        const data = await tasksApi.activity(activityFilters)
+        const data = await tasksApi.activity(debouncedActivityFilters)
         if (active) {
           setActivity(data)
         }
@@ -97,7 +102,7 @@ function TasksPage({ session }) {
     return () => {
       active = false
     }
-  }, [activityFilters, setActivity])
+  }, [debouncedActivityFilters, setActivity])
 
   function patchFilters(next) {
     setFilters((current) => ({ ...current, ...next }))
@@ -141,7 +146,7 @@ function TasksPage({ session }) {
       }
       setFormOpen(false)
       setTaskToEdit(null)
-      await refresh()
+      await refresh(filters)
     } catch (caughtError) {
       pushToast('Task request failed', caughtError.message, 'error')
     }
@@ -149,34 +154,58 @@ function TasksPage({ session }) {
 
   async function handleStatusAction(mode, draft) {
     if (!selectedTask) {
-      return
+      return false
     }
 
-    const payload = {
-      actor_id: currentActorId,
-      note: draft.note,
-      reason: draft.reason,
-      new_start_at: formatForApi(draft.new_start_at),
-      new_end_at: formatForApi(draft.new_end_at),
+    const payload = {}
+    const nextStartAt = formatForApi(draft.new_start_at)
+    const nextEndAt = formatForApi(draft.new_end_at)
+
+    if (currentActorId) {
+      payload.actor_id = currentActorId
+    }
+    if (draft.note?.trim()) {
+      payload.note = draft.note.trim()
+    }
+    if (draft.reason?.trim()) {
+      payload.reason = draft.reason.trim()
+    }
+    if (nextStartAt) {
+      payload.new_start_at = nextStartAt
+    }
+    if (nextEndAt) {
+      payload.new_end_at = nextEndAt
     }
 
     try {
+      let successTitle = 'Task status updated'
+
       if (mode === 'start') {
         await tasksApi.start(selectedTask.id, payload)
+        successTitle = 'Task started'
       } else if (mode === 'complete') {
         await tasksApi.complete(selectedTask.id, payload)
+        successTitle = 'Task sent for verification'
       } else if (mode === 'confirm') {
         await tasksApi.confirmCompletion(selectedTask.id, payload)
+        successTitle = 'Task verified'
       } else if (mode === 'postpone') {
         await tasksApi.postpone(selectedTask.id, payload)
+        successTitle = 'Task postponed'
       } else if (mode === 'cancel') {
         await tasksApi.cancel(selectedTask.id, payload)
+        successTitle = 'Task cancelled'
+      } else {
+        return false
       }
-      pushToast('Task status updated')
-      await refresh()
+
+      pushToast(successTitle)
+      await refresh(filters)
       await loadTaskDetail(selectedTask.id)
+      return true
     } catch (caughtError) {
       pushToast('Status update failed', caughtError.message, 'error')
+      return false
     }
   }
 
@@ -187,7 +216,7 @@ function TasksPage({ session }) {
     try {
       await tasksApi.addComment(selectedTask.id, { ...draft, author_id: currentActorId })
       await loadTaskDetail(selectedTask.id)
-      await refresh()
+      await refresh(filters)
       pushToast('Comment added')
     } catch (caughtError) {
       pushToast('Comment failed', caughtError.message, 'error')
@@ -209,7 +238,7 @@ function TasksPage({ session }) {
       setDeleteState({ open: false, task: null, impact: null })
       setSelectedTask(null)
       pushToast('Task deleted')
-      await refresh()
+      await refresh(filters)
     } catch (caughtError) {
       pushToast('Delete failed', caughtError.message, 'error')
     }
@@ -242,7 +271,8 @@ function TasksPage({ session }) {
 
   const plantOptions = plantsCatalog.length ? plantsCatalog : uniquePlants(tasks)
   const currentActorId =
-    meta.users.find((user) => user.id === actingUserId && user.role === actingRole)?.id ||
+    actingUserId ||
+    session?.user?.id ||
     meta.users.find((user) => user.role === actingRole)?.id ||
     meta.users[0]?.id ||
     null
@@ -395,3 +425,4 @@ function TasksPage({ session }) {
 }
 
 export default TasksPage
+

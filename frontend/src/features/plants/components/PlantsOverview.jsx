@@ -1,8 +1,8 @@
-function Card({ label, value }) {
+﻿function Card({ label, value }) {
   return (
-    <div className="border-b border-[#8ACBD0]/45 pb-4">
-      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#170C79]/55">{label}</p>
-      <p className="mt-2 text-4xl font-semibold tracking-tight text-[#170C79]">{value}</p>
+    <div className="border-b border-[#b7d387]/45 pb-4">
+      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#22331f]/55">{label}</p>
+      <p className="mt-2 text-4xl font-semibold tracking-tight text-[#22331f]">{value}</p>
     </div>
   )
 }
@@ -10,17 +10,17 @@ function Card({ label, value }) {
 function ListSection({ items, title }) {
   return (
     <article className="rounded-lg border border-white/80 bg-white/86 p-5 shadow-[0_18px_50px_rgba(23,12,121,0.08)]">
-      <h3 className="text-xl font-semibold tracking-tight text-[#170C79]">{title}</h3>
-      <div className="mt-4 divide-y divide-[#8ACBD0]/35">
+      <h3 className="text-xl font-semibold tracking-tight text-[#22331f]">{title}</h3>
+      <div className="mt-4 divide-y divide-[#b7d387]/35">
         {(items || []).map((item, index) => (
           <div
             key={`${title}-${item.id || item.label || index}`}
             className="flex items-center justify-between py-3"
           >
-            <span className="text-sm text-[#170C79]/75">
+            <span className="text-sm text-[#22331f]/75">
               {item.name || item.label || item.plant_name || item.resource_name}
             </span>
-            <span className="text-sm font-semibold text-[#170C79]">
+            <span className="text-sm font-semibold text-[#22331f]">
               {item.count || item.expected_harvest_date || item.harvested_at || item.used_at || item.quantity}
             </span>
           </div>
@@ -62,3 +62,4 @@ function PlantsOverview({ dashboard }) {
 }
 
 export default PlantsOverview
+

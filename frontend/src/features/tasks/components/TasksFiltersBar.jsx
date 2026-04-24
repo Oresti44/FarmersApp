@@ -2,6 +2,7 @@ import SearchSelect from '../../../components/common/SearchSelect.jsx'
 
 function TasksFiltersBar({
   actingUserId,
+  actingRole,
   filters,
   onChange,
   onNewTask,
@@ -10,10 +11,11 @@ function TasksFiltersBar({
   users = [],
   workerOptions,
 }) {
-  const userOptions = users.map((user) => ({
+  const actingUsers = users.filter((user) => user.role === actingRole)
+  const userOptions = (actingUsers.length ? actingUsers : users).map((user) => ({
     id: user.id,
     label: user.full_name,
-    subtitle: `${user.role} - ${user.email || user.username}`,
+    subtitle: `${user.role} / ${user.email || user.username}`,
   }))
   const plantOptions = plants.map((plant) => ({
     id: plant.id,
@@ -52,11 +54,11 @@ function TasksFiltersBar({
           />
         </label>
         <SearchSelect
-          label="Acting user"
+          label={actingRole === 'manager' ? 'Manager actor' : 'Acting user'}
           value={actingUserId}
           options={userOptions}
           onChange={onUserChange}
-          placeholder="Choose acting user"
+          placeholder={actingRole === 'manager' ? 'Choose manager' : 'Choose acting user'}
         />
         <SearchSelect
           label="Plant"

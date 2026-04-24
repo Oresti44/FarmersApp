@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import plantsApi from '../api/plantsApi.js'
 
@@ -7,13 +7,21 @@ function usePlants(filters) {
   const [dashboard, setDashboard] = useState(null)
   const [meta, setMeta] = useState({ farms: [], plant_stages: [], users: [], workers: [] })
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
+  const hasLoadedRef = useRef(false)
 
   useEffect(() => {
     let active = true
 
     async function load() {
-      setLoading(true)
+      const isInitialLoad = !hasLoadedRef.current
+
+      if (isInitialLoad) {
+        setLoading(true)
+      } else {
+        setRefreshing(true)
+      }
       setError('')
 
       try {
@@ -30,13 +38,18 @@ function usePlants(filters) {
         setPlants(plantsData)
         setDashboard(dashboardData)
         setMeta(metaData)
+        hasLoadedRef.current = true
       } catch (caughtError) {
         if (active) {
           setError(caughtError.message)
         }
       } finally {
         if (active) {
-          setLoading(false)
+          if (isInitialLoad) {
+            setLoading(false)
+          } else {
+            setRefreshing(false)
+          }
         }
       }
     }
@@ -49,7 +62,14 @@ function usePlants(filters) {
   }, [filters])
 
   async function refresh(nextFilters = filters) {
-    setLoading(true)
+    const isInitialLoad = !hasLoadedRef.current
+
+    if (isInitialLoad) {
+      setLoading(true)
+    } else {
+      setRefreshing(true)
+    }
+
     try {
       const [plantsData, dashboardData] = await Promise.all([
         plantsApi.list(nextFilters),
@@ -58,11 +78,16 @@ function usePlants(filters) {
       setPlants(plantsData)
       setDashboard(dashboardData)
       setError('')
+      hasLoadedRef.current = true
     } catch (caughtError) {
       setError(caughtError.message)
       throw caughtError
     } finally {
-      setLoading(false)
+      if (isInitialLoad) {
+        setLoading(false)
+      } else {
+        setRefreshing(false)
+      }
     }
   }
 
@@ -73,6 +98,7 @@ function usePlants(filters) {
     meta,
     plants,
     refresh,
+    refreshing,
   }
 }
 

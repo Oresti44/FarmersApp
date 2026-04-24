@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+﻿import { useCallback, useEffect, useState } from 'react'
 
 import EmptyState from '../../../components/common/EmptyState.jsx'
 import StatusBadge from '../../../components/common/StatusBadge.jsx'
@@ -63,15 +63,18 @@ function WorkerTasksPage({ session }) {
     await openTask(task)
   }
 
+  const canStart = selectedTask && ['scheduled', 'postponed'].includes(selectedTask.status)
+  const canComplete = selectedTask && ['scheduled', 'in_progress', 'postponed'].includes(selectedTask.status)
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mb-6 border-b border-[#8ACBD0]/45 pb-4">
-        <h1 className="text-3xl font-semibold tracking-tight text-[#170C79]">Assigned tasks</h1>
+      <div className="mb-6 border-b border-[#b7d387]/45 pb-4">
+        <h1 className="text-3xl font-semibold tracking-tight text-[#22331f]">Assigned tasks</h1>
         <div className="mt-4 max-w-xs">
           <select
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="w-full rounded-md border border-[#8ACBD0]/70 bg-white px-3 py-3 text-sm text-[#170C79] outline-none focus:border-[#56B6C6]"
+            className="w-full rounded-md border border-[#b7d387]/70 bg-white px-3 py-3 text-sm text-[#22331f] outline-none focus:border-[#6d9143]"
           >
             <option value="">All statuses</option>
             {TASK_STATUS_OPTIONS.map((status) => (
@@ -94,16 +97,16 @@ function WorkerTasksPage({ session }) {
                 key={task.id}
                 type="button"
                 onClick={() => openTask(task)}
-                className="w-full rounded-lg border border-white/80 bg-white/86 p-4 text-left shadow-sm transition hover:border-[#56B6C6]"
+                className="w-full rounded-lg border border-white/80 bg-white/86 p-4 text-left shadow-sm transition hover:border-[#6d9143]"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-[#170C79]">{task.title}</p>
-                    <p className="mt-1 text-sm text-[#170C79]/65">{task.plant_summary?.name || 'No plant'}</p>
+                    <p className="font-semibold text-[#22331f]">{task.title}</p>
+                    <p className="mt-1 text-sm text-[#22331f]/65">{task.plant_summary?.name || 'No plant'}</p>
                   </div>
                   <StatusBadge value={task.status} />
                 </div>
-                <p className="mt-3 text-sm text-[#170C79]/70">
+                <p className="mt-3 text-sm text-[#22331f]/70">
                   {new Date(task.scheduled_start_at).toLocaleString()} - {new Date(task.scheduled_end_at).toLocaleString()}
                 </p>
               </button>
@@ -115,16 +118,16 @@ function WorkerTasksPage({ session }) {
             {selectedTask ? (
               <div className="space-y-5">
                 <div>
-                  <h2 className="text-2xl font-semibold tracking-tight text-[#170C79]">{selectedTask.title}</h2>
-                  <p className="mt-2 text-sm leading-6 text-[#170C79]/70">{selectedTask.description || 'No description.'}</p>
+                  <h2 className="text-2xl font-semibold tracking-tight text-[#22331f]">{selectedTask.title}</h2>
+                  <p className="mt-2 text-sm leading-6 text-[#22331f]/70">{selectedTask.description || 'No description.'}</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="border-b border-[#8ACBD0]/45 pb-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#170C79]/55">Plant</p>
-                    <p className="mt-1 font-semibold text-[#170C79]">{selectedTask.plant_summary?.name || 'No plant'}</p>
+                  <div className="border-b border-[#b7d387]/45 pb-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#22331f]/55">Plant</p>
+                    <p className="mt-1 font-semibold text-[#22331f]">{selectedTask.plant_summary?.name || 'No plant'}</p>
                   </div>
-                  <div className="border-b border-[#8ACBD0]/45 pb-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#170C79]/55">Status</p>
+                  <div className="border-b border-[#b7d387]/45 pb-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#22331f]/55">Status</p>
                     <div className="mt-1">
                       <StatusBadge value={selectedTask.status} />
                     </div>
@@ -135,17 +138,30 @@ function WorkerTasksPage({ session }) {
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
                   placeholder="Add a note before saving an action"
-                  className="w-full rounded-md border border-[#8ACBD0]/70 bg-white px-4 py-3 text-sm text-[#170C79] outline-none focus:border-[#56B6C6]"
+                  className="w-full rounded-md border border-[#b7d387]/70 bg-white px-4 py-3 text-sm text-[#22331f] outline-none focus:border-[#6d9143]"
                 />
+                <p className="text-sm text-[#22331f]/65">
+                  When a worker marks a task completed, it goes to the manager for verification.
+                </p>
                 <div className="flex flex-wrap gap-3">
-                  <button type="button" onClick={() => startTask(selectedTask)} className="rounded-md bg-[#8ACBD0] px-4 py-2 text-sm font-semibold text-[#170C79]">
+                  <button
+                    type="button"
+                    disabled={!canStart}
+                    onClick={() => startTask(selectedTask)}
+                    className="rounded-md bg-[#b7d387] px-4 py-2 text-sm font-semibold text-[#22331f] disabled:cursor-not-allowed disabled:opacity-55"
+                  >
                     Start
                   </button>
-                  <button type="button" onClick={() => addNote(selectedTask)} className="rounded-md border border-[#56B6C6] bg-white px-4 py-2 text-sm font-semibold text-[#170C79]">
+                  <button type="button" onClick={() => addNote(selectedTask)} className="rounded-md border border-[#6d9143] bg-white px-4 py-2 text-sm font-semibold text-[#22331f]">
                     Add note
                   </button>
-                  <button type="button" onClick={() => completeTask(selectedTask)} className="rounded-md bg-[#56B6C6] px-4 py-2 text-sm font-semibold text-[#170C79]">
-                    Pending completion
+                  <button
+                    type="button"
+                    disabled={!canComplete}
+                    onClick={() => completeTask(selectedTask)}
+                    className="rounded-md bg-[#6d9143] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
+                  >
+                    Send for verification
                   </button>
                 </div>
               </div>
@@ -160,3 +176,4 @@ function WorkerTasksPage({ session }) {
 }
 
 export default WorkerTasksPage
+

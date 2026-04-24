@@ -1,4 +1,4 @@
-import DrawerShell from '../../../components/common/DrawerShell.jsx'
+﻿import DrawerShell from '../../../components/common/DrawerShell.jsx'
 import StatusBadge from '../../../components/common/StatusBadge.jsx'
 
 function PlantDrawer({ onClose, onEdit, onNewHarvest, onNewResource, open, plant }) {
@@ -10,8 +10,8 @@ function PlantDrawer({ onClose, onEdit, onNewHarvest, onNewResource, open, plant
     <DrawerShell
       open={open}
       onClose={onClose}
-      title={`${plant.name}${plant.variety ? ` · ${plant.variety}` : ''}`}
-      description={`${plant.stage?.name || 'No stage'} · ${plant.area_summary?.name || 'No area'}`}
+      title={`${plant.name}${plant.variety ? ` / ${plant.variety}` : ''}`}
+      description={`${plant.stage?.name || 'No stage'} / ${plant.area_summary?.name || 'No area'}`}
       footer={
         <div className="flex flex-wrap justify-end gap-3">
           <button type="button" onClick={() => onEdit(plant)} className="rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold">Edit</button>
@@ -31,11 +31,11 @@ function PlantDrawer({ onClose, onEdit, onNewHarvest, onNewResource, open, plant
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">Farm</p>
-              <p className="mt-2 text-sm text-stone-700">{plant.farm?.name || '—'}</p>
+              <p className="mt-2 text-sm text-stone-700">{plant.farm?.name || '-'}</p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">Area</p>
-              <p className="mt-2 text-sm text-stone-700">{plant.area_summary?.name || '—'}</p>
+              <p className="mt-2 text-sm text-stone-700">{plant.area_summary?.name || '-'}</p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">Quantity</p>
@@ -43,7 +43,7 @@ function PlantDrawer({ onClose, onEdit, onNewHarvest, onNewResource, open, plant
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">Expected harvest</p>
-              <p className="mt-2 text-sm text-stone-700">{plant.expected_harvest_date || '—'}</p>
+              <p className="mt-2 text-sm text-stone-700">{plant.expected_harvest_date || '-'}</p>
             </div>
           </div>
           <p className="mt-5 text-sm leading-7 text-stone-600">{plant.notes || 'No notes yet.'}</p>
@@ -54,7 +54,7 @@ function PlantDrawer({ onClose, onEdit, onNewHarvest, onNewResource, open, plant
             {(plant.tasks || []).map((task) => (
               <div key={task.id} className="rounded-[18px] bg-white px-4 py-3 ring-1 ring-stone-200">
                 <p className="font-semibold text-stone-900">{task.title}</p>
-                <p className="text-sm text-stone-500">{task.status} · {new Date(task.scheduled_start_at).toLocaleString()}</p>
+                <p className="text-sm text-stone-500">{task.status} / {new Date(task.scheduled_start_at).toLocaleString()}</p>
               </div>
             ))}
           </div>
@@ -76,7 +76,7 @@ function PlantDrawer({ onClose, onEdit, onNewHarvest, onNewResource, open, plant
             {(plant.resource_usage || []).map((entry) => (
               <div key={entry.id} className="rounded-[18px] bg-white px-4 py-3 ring-1 ring-stone-200">
                 <p className="font-semibold text-stone-900">{entry.resource_name}</p>
-                <p className="text-sm text-stone-500">{entry.quantity} {entry.quantity_unit} · {new Date(entry.used_at).toLocaleString()}</p>
+                <p className="text-sm text-stone-500">{entry.quantity} {entry.quantity_unit} / {new Date(entry.used_at).toLocaleString()}</p>
               </div>
             ))}
           </div>
@@ -87,3 +87,4 @@ function PlantDrawer({ onClose, onEdit, onNewHarvest, onNewResource, open, plant
 }
 
 export default PlantDrawer
+

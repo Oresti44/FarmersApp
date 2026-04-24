@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 
 import DrawerShell from '../../../components/common/DrawerShell.jsx'
 import SearchSelect from '../../../components/common/SearchSelect.jsx'
@@ -50,8 +50,8 @@ function TaskForm({ actingUserId, open, onClose, onSubmit, plants, task, workers
 
   const plantOptions = plants.map((plant) => ({
     id: plant.id,
-    label: `${plant.name}${plant.variety ? ` · ${plant.variety}` : ''}`,
-    subtitle: `${plant.area_summary?.type || 'area'} · ${plant.area_summary?.name || 'No location'}`,
+    label: `${plant.name}${plant.variety ? ` / ${plant.variety}` : ''}`,
+    subtitle: `${plant.area_summary?.type || 'area'} / ${plant.area_summary?.name || 'No location'}`,
   }))
   const selectedPlant = plants.find((plant) => String(plant.id) === String(draft.plant_id))
   const visibleWorkers = workers.filter((worker) =>
@@ -187,7 +187,7 @@ function TaskForm({ actingUserId, open, onClose, onSubmit, plants, task, workers
         <div className="rounded-[24px] bg-stone-50 p-4 ring-1 ring-stone-200">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">Derived location</p>
           <p className="mt-2 text-sm text-stone-700">
-            {selectedPlant?.area_summary?.type || 'area'} · {selectedPlant?.area_summary?.name || 'Select a plant'}
+            {selectedPlant?.area_summary?.type || 'area'} / {selectedPlant?.area_summary?.name || 'Select a plant'}
           </p>
         </div>
         <label className="block">
@@ -378,3 +378,4 @@ function TaskForm({ actingUserId, open, onClose, onSubmit, plants, task, workers
 }
 
 export default TaskForm
+
